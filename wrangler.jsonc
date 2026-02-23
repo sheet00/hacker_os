@@ -9,7 +9,6 @@
     "nodejs_compat"
   ],
   "assets": {
-    "binding": "ASSETS",
     "directory": "./src/dist"
   },
   "observability": {
