@@ -52,13 +52,33 @@ export const phase3Templates: LogTemplate[] = [
     task: "EXPLOIT EXECUTION",
   },
   {
-    log: "[INFO] Payload sent. Waiting for reverse connection...",
-    msg: "リクエスト送信完了。\nターゲットからのバックコネクトを待機。",
-    task: "SHELL LISTENER",
+    log: "[INFO] Payload sent. Monitoring LDAP and HTTP listeners...",
+    msg: "ペイロード送出完了。\nインバウンド・コールバック待機中...",
+    task: "EXPLOIT MONITORING",
+  },
+  {
+    log: "[INFO] Incoming LDAP request from {IP}:54210 for /Basic/Command/Base64/...",
+    msg: "ターゲットからのLDAP疎通を確認。\nJNDIリファレンス・ポインタを解決。",
+    task: "LDAP INTERCEPT",
+  },
+  {
+    log: "[INFO] Sending JNDI Reference pointing to http://{ATTACKER_IP}:8888/Exploit.class",
+    msg: "JNDI応答送信。\n攻撃コード（Exploit.class）へのリダイレクトを強制。",
+    task: "LDAP INTERCEPT",
+  },
+  {
+    log: "[INFO] HTTP GET request for /Exploit.class received from {IP}",
+    msg: "ターゲットによるクラスファイルへのアクセスを検知。\n最終ペイロードを転送中。",
+    task: "PAYLOAD DELIVERY",
+  },
+  {
+    log: "[INFO] Exploit.class delivered successfully. Triggering Remote Code Execution...",
+    msg: "配信完了。RCEトリガー発動。\nリモートプロセスの制御権を奪取中。",
+    task: "PAYLOAD DELIVERY",
   },
   {
     log: "{WAIT_SEARCH}",
-    msg: "ポート4444にてリスナー待機中。\n認証バイパスを確認しています。",
+    msg: "ポート4444にてリスナー待機中。\nリバースシェルの確立を待っています。",
     task: "SHELL LISTENER",
   },
   {
