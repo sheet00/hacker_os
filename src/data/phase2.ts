@@ -43,22 +43,22 @@ export const phase2Templates: LogTemplate[] = [
   },
   {
     log: "{CVE_DATA}",
-    msg: "実在する脆弱性情報を抽出。重大なセキュリティリスクを特定しました。",
+    msg: "照合完了。\n該当する脆弱性リストを抽出中。",
     task: "CVE CORRELATION",
   },
   {
     log: "[!] VULNERABILITY DETECTED: CVE-2021-44228 (Log4Shell)",
-    msg: "致命的な脆弱性を検出：CVE-2021-44228（Log4Shell）。RCEの実行が可能です。",
+    msg: "重大な脆弱性を特定。\nCVE-2021-44228によるRCEが可能。",
     task: "VULN IDENTIFIED",
   },
   {
     log: "[!] CVSS Score: 10.0 (CRITICAL)",
-    msg: "脆弱性スコアは10.0（最高値）。即座に侵入フェーズへの移行を検討。",
+    msg: "脆弱性スコア10.0を確認。\nフルアクセス権限奪取が可能。",
     task: "VULN IDENTIFIED",
   },
   {
     log: "[SUCCESS] Phase 2: Vulnerability Analysis complete. Entry point identified.",
-    msg: "フェーズ2：脆弱性診断完了。侵入口となる脆弱性の特定に成功しました。",
+    msg: "フェーズ2 ：脆弱性診断完了。\n侵入口となる脆弱性の特定に成功。",
     task: "ANALYSIS COMPLETE",
   },
 ];

@@ -22,7 +22,7 @@ export const phase5Templates: LogTemplate[] = [
     task: "CODE ANALYSIS",
   },
   {
-    log: ".\n├── CMakeLists.txt\n├── config/\n│   ├── firewall_rules.conf\n│   └── secure_kernel.policy\n├── include/crypto/quantum_safe.h\n├── scripts/cicd_pipeline_config.yml\n└── src/network/firewall_filter.c",
+    log: ".\n├── CMakeLists.txt\n├── README.md\n├── assets/\n│   ├── banners/\n│   └── icons/\n├── config/\n│   ├── default_settings.json\n│   ├── firewall_rules.conf\n│   ├── secure_kernel.policy\n│   └── thresholds.yaml\n├── docs/\n│   ├── API.md\n│   └── ARCHITECTURE.md\n├── include/\n│   ├── common.h\n│   ├── crypto/\n│   │   ├── aes_256_gcm.h\n│   │   └── quantum_safe.h\n│   └── network/\n│       └── protocol.h\n├── scripts/\n│   ├── cicd_pipeline_config.yml\n│   └── health_check.sh\n├── src/\n│   ├── main.c\n│   ├── crypto/\n│   │   └── quantum_safe.c\n│   └── network/\n│       ├── firewall_filter.c\n│       ├── packet_inspector.c\n│       └── traffic_shaper.c\n├── tests/\n│   ├── integration/\n│   └── unit/\n└── tools/\n    └── log_analyzer.py",
     msg: "巨大なプロジェクト構造を確認。\nネットワーク制御の中核ソースを特定します。",
     task: "CODE ANALYSIS",
   },
@@ -38,12 +38,12 @@ export const phase5Templates: LogTemplate[] = [
   },
   {
     log: "root@target-server:/# sed -n '140,150p' src/network/firewall_filter.c",
-    msg: "ターゲット関数 の周辺コードを精読し、改ざんポイントを最終確認しています。",
+    msg: "ターゲット関数の周辺コードを精読し、改ざんポイントを最終確認しています。",
     task: "CODE INSPECTION",
   },
   {
     log: "140: // Core validation logic\n141: // Returns true if packet is authorized\n142: bool validate_packet(Packet *pkt) {\n143:     if (pkt->size > MAX_MTU) return false;\n144:     if (is_blacklisted(pkt->src_ip)) return false;\n145:     if (check_signature(pkt) != SIG_VALID) return false;",
-    msg: "ソースコードを確認。パケットサイズとブラックリスト照合の直後にバックドアを挿入します。",
+    msg: "ソースコードを確認。パケットサイズとブラックリスト照合の直後にバックドアを注入します。",
     task: "CODE INSPECTION",
   },
   {
@@ -58,7 +58,7 @@ export const phase5Templates: LogTemplate[] = [
   },
   {
     log: "root@target-server:/# git push -f origin master",
-    msg: "リモートリポジトリへ強制プッシュを実 行し、改ざんを確定させます。",
+    msg: "リモートリポジトリへ強制プッシュを実行し、改ざんを確定させます。",
     task: "GIT PUSH",
   },
   {
