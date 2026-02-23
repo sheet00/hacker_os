@@ -297,23 +297,23 @@ const App: React.FC = () => {
       <div className="w-1/3 h-full bg-[#001100] p-10 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] border-l border-[#00ff41]/10 overflow-hidden">
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0">
           {[1, 2, 3, 4, 5, 6, 7].map((p) => (
-            <button key={p} onClick={() => jumpToPhase(p)} className={`text-[9px] px-3 py-1 border transition-all duration-300 ${phase === p ? 'bg-[#00ff41] text-black border-[#00ff41] font-bold shadow-[0_0_10px_rgba(0,255,0,0.5)]' : 'bg-transparent text-[#00ff41] border-[#00ff41]/30 hover:border-[#00ff41]'}`}>PHASE {p}</button>
+            <button key={p} onClick={() => jumpToPhase(p)} className={`text-[11px] px-3 py-1 border transition-all duration-300 ${phase === p ? 'bg-[#00ff41] text-black border-[#00ff41] font-bold shadow-[0_0_10px_rgba(0,255,0,0.5)]' : 'bg-transparent text-[#00ff41] border-[#00ff41]/30 hover:border-[#00ff41]'}`}>PHASE {p}</button>
           ))}
         </div>
-        <div className="mb-8 border-b border-[#00ff41]/30 pb-4 shrink-0 text-xs font-bold text-[#00ff41] uppercase">
+        <div className="mb-8 border-b border-[#00ff41]/30 pb-4 shrink-0 text-sm font-bold text-[#00ff41] uppercase tracking-wider">
           System Narrative Monitor<br/>
-          <span className="text-cyan-400">ACTIVE PHASE: {phase}</span><br/>
+          <span className="text-cyan-400 text-base">ACTIVE PHASE: {phase}</span><br/>
           <span className="text-green-500">TASK: {activeTask}</span>
         </div>
         <div className="flex-1 flex flex-col justify-center min-h-0 py-10">
-          <div className="w-full bg-[#002200] border-l-4 border-green-500 p-6 shadow-[0_0_20px_rgba(0,255,0,0.1)]">
-            <p className="text-green-100 text-sm md:text-base font-sans whitespace-pre-wrap">{activeMessage}</p>
+          <div className="w-full bg-[#002200] border-l-4 border-green-500 p-8 shadow-[0_0_30px_rgba(0,255,0,0.1)]">
+            <p className="text-green-100 text-lg md:text-xl xl:text-2xl font-sans whitespace-pre-wrap leading-relaxed">{activeMessage}</p>
           </div>
         </div>
-        <div className="mt-auto opacity-50 text-[11px] space-y-3 font-mono border-t border-[#00ff41]/10 pt-6 shrink-0">
-          <div className="flex justify-between"><span>CPU LOAD:</span><span className="text-white font-bold">{cpuLoad.toFixed(1)}%</span></div>
-          <div className="flex justify-between"><span>NET TRAFFIC:</span><span className="text-white font-bold">{netTraffic}</span></div>
-          <div className="flex justify-between"><span>SESSION UPTIME:</span><span className="text-white font-bold">{uptime}</span></div>
+        <div className="mt-auto opacity-60 text-[13px] space-y-4 font-mono border-t border-[#00ff41]/10 pt-8 shrink-0">
+          <div className="flex justify-between"><span>CPU LOAD:</span><span className="text-white font-bold text-base">{cpuLoad.toFixed(1)}%</span></div>
+          <div className="flex justify-between"><span>NET TRAFFIC:</span><span className="text-white font-bold text-base">{netTraffic}</span></div>
+          <div className="flex justify-between"><span>SESSION UPTIME:</span><span className="text-white font-bold text-base">{uptime}</span></div>
         </div>
       </div>
     </div>
