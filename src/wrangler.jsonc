@@ -1,0 +1,18 @@
+/**
+ * Cloudflare Workers (Assets) 用 Wrangler 設定
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hacker-sim",
+  "compatibility_date": "2024-09-19",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

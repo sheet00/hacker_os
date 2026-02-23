@@ -1,73 +1,42 @@
-# React + TypeScript + Vite
+# Hacker Simulation Game
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ユーザーがキーボードを叩くだけで、映画のような「それっぽい」ハッキング・シーケンスが高速で流れる、スーパーハッカー体験シミュレーター。
 
-Currently, two official plugins are available:
+## 1. プロジェクト概要
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+このシミュレーターは、偵察から始まり、実在する脆弱性（Log4Shell, PwnKit）を突いた侵入、特権昇格、さらにはCI/CDパイプラインを悪用したサプライチェーン攻撃を経て、最終的に世界規模の主要インフラを一斉停止させるまでの「高度標的型攻撃（APT）」の全行程を、圧倒的なリアリティと無機質なシステムログで再現します。
 
-## React Compiler
+## 2. 実装された攻撃プロトコル（全8フェーズ）
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1.  **Phase 1: 偵察 (Reconnaissance)** - `dig`, `subfinder`, `httpx`, `wafw00f` を使用したターゲットドメインの全貌把握。
+2.  **Phase 2: 脆弱性診断 (Vulnerability Analysis)** - `nmap` によるサービス特定と、`CVE-2021-44228 (Log4Shell)` の発見。
+3.  **Phase 3: 初期潜入 (Initial Access)** - JNDIインジェクションによるRCE（任意コード実行）とリバースシェルの確立。LDAP/HTTPサーバーとの詳細なやり取りを再現。
+4.  **Phase 4: 権限昇格 (Privilege Escalation)** - `linpeas` による内部調査と、`CVE-2021-4034 (PwnKit)` を利用した root 権限の奪取。
+5.  **Phase 5: 内部工作 (Code Injection)** - 防衛システム `AEGIS-ARMOR` のソースコードへのバックドア（`0xDEADBEEF` マジックパケット）の注入と強制プッシュ。
+6.  **Phase 6: 不正デプロイ (Malicious Deployment)** - 改ざんされたコードがCI/CDパイプラインを通じて世界中のノードへ自動配布される過程を傍受。
+7.  **Phase 7: 痕跡抹消 (Anti-Forensics)** - `shred` によるファイル抹消、`auth.log` の編集、履歴削除を行い、中央サーバーから完全に離脱。
+8.  **Phase 8: 広域停止 (SIGTERM-GLOBAL-INFRA)** - 安全圏（自端末）からマジックパケットを一斉射出。世界100箇所以上の主要インフラ（金融、電力、通信、防衛等）を同時にシャットダウン。
 
-## Expanding the ESLint configuration
+## 3. 技術的特徴・こだわり
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **高精度なシステムログ**: `systemctl status` や `journalctl` の出力を完全に再現。PID、メモリ、CGroup、および `since` 期間表示を含む、プロフェッショナルな無機質さを追求。
+- **動的タイムスタンプ**: ログが表示される瞬間に秒単位で現在時刻が注入され、攻撃が「今、リアルタイムで起きている」臨場感を演出。
+- **圧倒的な物量**: 最終フェーズでは 100 以上のユニークなグローバル・ノード（パブリックIP）が、0.1秒間隔の高速ログで次々と停止していく様子を描写。
+- **モダンな技術スタック**:
+  - **Frontend**: React (TypeScript)
+  - **Styling**: Tailwind CSS v4 (レトロなターミナル風、スキャンライン、グリッチ効果)
+  - **Logic**: 非同期処理と React Hooks による流動的なログ進行システム
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 4. 開発・実行方法
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+```bash
+# 依存関係のインストール
+npm install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# 開発サーバーの起動
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 5. 注意事項
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+本プロジェクトは視覚的な演出を目的としたシミュレーターであり、実際の攻撃機能は一切含まれていません。教育およびエンターテインメントの目的でご利用ください。
