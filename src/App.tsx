@@ -26,21 +26,33 @@ const RECON_LOG_TEMPLATES = [
   { log: "whois {DOMAIN} | grep 'Registrant Organization'", msg: "WHOIS情報を照会。\nドメインの登録組織を特定中。", task: "WHOIS QUERY" },
   { log: "Registrant Organization: US Government Agency", msg: "登録組織が政府機関であることを確認。\nターゲットを固定。", task: "TARGET VERIFICATION" },
   { log: "subfinder -d {DOMAIN} -all -silent", msg: "サブドメインの列挙を実行。\nアタックサーフェスを拡張中。", task: "SUBDOMAIN ENUM" },
-  { log: "[FOUND] api.{DOMAIN}\n[FOUND] secure-gateway.{DOMAIN}", msg: "主要なゲートウェイを特定しました。", task: "SUBDOMAIN ENUM" },
+  { log: "[FOUND] api.{DOMAIN}", msg: "APIゲートウェイを検出。\nバックエンドへの接続ポイントとして記録。", task: "SUBDOMAIN ENUM" },
+  { log: "[FOUND] dev.{DOMAIN}", msg: "開発環境を捕捉。\n構成不備の可能性を調査対象に追加。", task: "SUBDOMAIN ENUM" },
+  { log: "[FOUND] vpn.{DOMAIN}", msg: "VPNエンドポイントを捕捉。\n内部ネットワークへのバイパスを検討。", task: "SUBDOMAIN ENUM" },
+  { log: "[FOUND] secure-gateway.{DOMAIN}", msg: "認証ゲートウェイを特定。\n認証プロトコルの解析を開始。", task: "SUBDOMAIN ENUM" },
+  { log: "httpx -list subdomains.txt -status-code -title", msg: "各サブドメインの稼働状況とHTTPステータスを確認中。", task: "HTTP SERVICE SCAN" },
+  { log: "https://dev.{DOMAIN} [403] [Access Denied]", msg: "開発サーバーへのアクセス拒否を確認。\nWAFの存在を検知。", task: "HTTP SERVICE SCAN" },
+  { log: "https://api.{DOMAIN} [200] [API Gateway]", msg: "APIサーバーの応答を確認。\n侵入口としてマーク。", task: "HTTP SERVICE SCAN" },
+  { log: "https://secure-gateway.{DOMAIN} [200] [Enterprise Portal]", msg: "ポータルの稼働を確認。\n脆弱性調査リストに追加。", task: "HTTP SERVICE SCAN" },
   { log: "[INFO] Detecting WAF (Web Application Firewall)...", msg: "防御製品（WAF）のベンダーとバージョンの特定を開始。", task: "WAF DETECTION" },
-  { log: "wafw00f https://{DOMAIN}\nThe site https://{DOMAIN} is behind Cloudflare WAF.", msg: "Cloudflareによる保護を確認。回避戦略を策定中。", task: "WAF DETECTION" },
+  { log: "wafw00f https://{DOMAIN}", msg: "WAFフィンガープリントを解析中。", task: "WAF DETECTION" },
+  { log: "The site https://{DOMAIN} is behind Cloudflare WAF.", msg: "Cloudflareによる保護を確認。回避戦略を策定中。", task: "WAF DETECTION" },
   { log: "[SUCCESS] Phase 1: Reconnaissance complete.", msg: "フェーズ1：偵察完了。ターゲットのネットワークマップ作成に成功。", task: "RECON COMPLETE" },
 ];
 
 const VULN_LOG_TEMPLATES = [
-  { log: "[INFO] Starting Phase 2: Vulnerability Analysis...", msg: "フェーズ2：脆弱性診断を開始。特定したサービスのスキャンを実行中。", task: "SCAN INITIALIZATION" },
+  { log: "[INFO] Starting Phase 2: Vulnerability Analysis...", msg: "フェーズ2：脆弱性診断を開始。特定したサービスの詳細なスキャンを実行中。", task: "SCAN INITIALIZATION" },
   { log: "nmap -sV -T4 {IP}", msg: "Nmapによるサービスバージョンの特定を実行中。", task: "NMAP PORT SCAN" },
-  { log: "Scanning {IP}:8080 (http-proxy) ... [OPEN] Apache Log4j 2.14.0", msg: "プロキシサーバーにてLog4jの特定バージョンを検出。", task: "NMAP PORT SCAN" },
-  { log: "[INFO] Correlating service versions with CVE database...", msg: "検出したサービスと既知の脆弱性データベースを照合中。", task: "CVE CORRELATION" },
-  { log: "{WAIT_SEARCH}", msg: "CVEデータベースを検索中。整合性を検証しています。", task: "DATABASE SEARCH" },
-  { log: "{CVE_DATA}", msg: "照合完了。該当する脆弱性リストを抽出中。", task: "CVE CORRELATION" },
-  { log: "[!] VULNERABILITY DETECTED: CVE-2021-44228 (Log4Shell)", msg: "重大な脆弱性を特定。CVE-2021-44228によるRCEが可能。", task: "VULN IDENTIFIED" },
-  { log: "[SUCCESS] Phase 2: Vulnerability Analysis complete.", msg: "フェーズ2：脆弱性診断完了。侵入口となる脆弱性の特定に成功。", task: "ANALYSIS COMPLETE" }
+  { log: "Scanning {IP}:22 (ssh) ... [OPEN] OpenSSH 8.2p1", msg: "SSHサービス（ポート22）が稼働中。\nバージョン8.2p1を検出。", task: "NMAP PORT SCAN" },
+  { log: "Scanning {IP}:80 (http) ... [OPEN] Apache 2.4.41", msg: "HTTPサービス（ポート80）が稼働中。\nバージョン2.4.41を検出。", task: "NMAP PORT SCAN" },
+  { log: "Scanning {IP}:443 (https) ... [OPEN] nginx 1.18.0", msg: "HTTPSサービス（ポート443）が稼働中。\nnginx 1.18.0を検出。", task: "NMAP PORT SCAN" },
+  { log: "Scanning {IP}:8080 (http-proxy) ... [OPEN] Apache Log4j 2.14.0", msg: "プロキシサーバー（ポート8080）にて、Log4jの特定バージョンを検出。", task: "NMAP PORT SCAN" },
+  { log: "[INFO] Correlating service versions with CVE database...", msg: "検出したサービスと既知の脆弱性（CVE）データベースを照合中。", task: "CVE CORRELATION" },
+  { log: "{WAIT_SEARCH}", msg: "CVEデータベースを検索中... 整合性を検証しています。", task: "DATABASE SEARCH" },
+  { log: "{CVE_DATA}", msg: "実在する脆弱性情報を抽出。重大なセキュリティリスクを特定しました。", task: "CVE CORRELATION" },
+  { log: "[!] VULNERABILITY DETECTED: CVE-2021-44228 (Log4Shell)", msg: "致命的な脆弱性を検出：CVE-2021-44228（Log4Shell）。RCEの実行が可能です。", task: "VULN IDENTIFIED" },
+  { log: "[!] CVSS Score: 10.0 (CRITICAL)", msg: "脆弱性スコアは10.0（最高値）。即座に侵入フェーズへの移行を検討。", task: "VULN IDENTIFIED" },
+  { log: "[SUCCESS] Phase 2: Vulnerability Analysis complete. Entry point identified.", msg: "フェーズ2：脆弱性診断完了。侵入口となる脆弱性の特定に成功しました。", task: "ANALYSIS COMPLETE" }
 ];
 
 const ACCESS_LOG_TEMPLATES = [
