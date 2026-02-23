@@ -8,7 +8,7 @@ export const phase8Templates: LogTemplate[] = [
   },
   {
     log: "root@hacker_os:~# cat global_targets.txt | head -n 20",
-    msg: `12,540箇所のターゲット・リストをロード。ノード・アドレッシング・マップを構築。`,
+    msg: `12,540箇所のターゲット・ノードを特定。グローバル・インフラストラクチャ・マップを構築。`,
     task: "NODE ENUMERATION",
   },
   {
@@ -18,7 +18,17 @@ export const phase8Templates: LogTemplate[] = [
   },
   {
     log: "root@hacker_os:~# python3 mass_trigger.py --magic 0xDEADBEEF --mode total-shutdown",
-    msg: `停止シグナルを一斉射出。マジックパケット(0xDEADBEEF)を全域へ送信。`,
+    msg: `一斉停止コマンドを入力。システムの最終警告を確認中。`,
+    task: "SIGNAL BROADCAST",
+  },
+  {
+    log: "[!] WARNING: This will initiate a TOTAL SHUTDOWN on 12,540 nodes.\n[!] ACTION: Irreversible global infrastructure halt.\nConfirm execution? [y/N]: ",
+    msg: `全インフラの停止警告。実行の最終承認が求められています。`,
+    task: "AUTHORIZATION",
+  },
+  {
+    log: "y\n[INFO] Authorization verified. Master key 0xDEADBEEF accepted.\n[INFO] Starting high-speed broadcast via botnet nodes...",
+    msg: `承認完了。全パケットを一斉射出します。`,
     task: "SIGNAL BROADCAST",
   },
   {

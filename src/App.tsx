@@ -98,7 +98,7 @@ const App: React.FC = () => {
     const timer = setTimeout(() => {
       setDisplayedLogs(prev => [...prev, SHUTDOWN_LOGS[shutdownIdx]]);
       setShutdownIdx(prev => prev + 1);
-    }, 300);
+    }, 100);
     return () => clearTimeout(timer);
   }, [shutdownIdx, phase]);
 
@@ -212,6 +212,9 @@ const App: React.FC = () => {
                 ${log.startsWith('[INFO]') ? 'text-yellow-100 font-bold' : ''}
                 ${log.startsWith('[!]') ? 'text-red-500 font-black' : ''}
                 ${log.startsWith('[  OK  ]') ? 'text-[#00ff41] font-bold' : ''}
+                ${log.startsWith('[SEND]') ? 'text-cyan-400 font-bold' : ''}
+                ${log.startsWith('[RECV]') ? 'text-yellow-400 font-bold' : ''}
+                ${log.startsWith('---') ? 'text-white/20' : ''}
                 ${log.startsWith('●') ? 'text-red-500 animate-pulse' : ''}
                 ${log.includes('Active: deactivating') ? 'text-yellow-400 italic' : ''}
                 ${log.includes('Main PID:') ? 'text-white/70' : ''}

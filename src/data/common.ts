@@ -39,25 +39,34 @@ export const AUTO_LOGS: string[] = (() => {
 })();
 
 export const SHUTDOWN_LOGS: string[] = (() => {
-  const nodes = [
-    "NY-FIN-WALL-STREET", "LONDON-EXCH-CITY", "TOKYO-STOCK-KABUTOCHO", "SINGAPORE-FIN-RAFFLES", "HK-EXCH-CENTRAL", "FRANKFURT-EXCH-BOERSE", "ZURICH-BANKING-CRYPT",
-    "US-EAST-PWR-GRID", "US-WEST-PWR-GRID", "EU-CENTRAL-PWR-SYNC", "CHINA-THREE-GORGES-CTRL", "RUSSIA-GAZPROM-FLOW", "FRENCH-NUC-GRAVELINES", "JAPAN-FUKUSHIMA-SEC",
-    "TEXAS-ERCOT-LOAD-BAL", "DUBAI-WATER-DESAL-PLANT", "NORAD-EARLY-WARNING", "PENTAGON-SECURE-CORE", "NATO-COMMAND-BRUSSELS", "STRATCOM-GLOBAL-STRIKE",
-    "KREMLIN-SECURE-COM", "MOSSAD-INTEL-LINK", "PACIFIC-FLEET-PEARL-HARBOR", "ATLANTIC-FLEET-NORFOLK", "UK-MOD-WHITEHALL", "IDF-IRON-DOME-CTRL", "JFK-AIR-TRAFFIC-CTRL",
-    "HEATHROW-ATC-RADAR", "HANEDA-GROUND-LOGIC", "CHANGI-AUTO-TERMINAL", "DUBAI-INTL-LOGISTICS", "SUEZ-CANAL-TRAFFIC-MGMT", "PANAMA-CANAL-LOCK-SYS",
-    "ROTTERDAM-PORT-AUTOMATION", "SHANGHAI-CONTAINER-TERM", "STARLINK-ORBIT-G12", "GPS-III-CONSTELLATION", "GALILEO-GNSS-SAT", "GLONASS-SECURE-BEAM",
-    "NASA-DSN-GOLDSTONE", "ESA-ESTEC-TRACKING", "JAXA-TANEGASHIMA-LNK", "GLOBAL-DNS-ROOT-A-VERISIGN", "GLOBAL-DNS-ROOT-K-RIPE", "ICANN-IANA-SEC-DNS",
-    "ATLANTIC-FIBER-TAT14", "PACIFIC-CABLE-UNITY", "INDIGO-SUBSEA-CABLE", "BGP-ASHBURN-IXP", "BGP-AMSTERDAM-AMS-IX", "AWS-REGION-US-EAST-1",
-    "AWS-REGION-AP-NORTHEAST-1", "GCP-ASIA-SOUTH-1", "AZURE-EUROPE-WEST", "CLOUDFLARE-EDGE-CHICAGO", "AKAMAI-CDN-PARIS", "GOOGLE-DNS-8.8.8.8",
-    "QUAD9-DNS-9.9.9.9", "CERN-LHC-DATA-GRID", "ITER-FUSION-STABILITY-CTRL", "WHO-PANDEMIC-WARN-NET", "INTERPOL-GLOBAL-SEARCH", "UN-SECURE-VOTING-NET",
-    "APPLE-ICLOUD-SYNC-DC", "META-PROD-SERVER-OR", "SAUDI-ARAMCO-DATA-VAULT", "BP-OIL-PLATFORM-CTRL", "SHELL-DEEPWATER-DRIL", "SAMSUNG-SEMICON-FAB",
-    "TSMC-NANOFAB-HSINCHU", "VW-AUTO-LOGI-WOLFSBURG", "TESLA-GIGA-BERLIN-GRID", "RIO-TINTO-AUTONOMOUS-MINING", "MAERSK-LOGISTICS-TRACKING",
-    "FEDEX-GLOBAL-SORT-MEMPHIS", "DHL-EURO-HUB-LEIPZIG", "UPS-WORLDPORT-LOUISVILLE", "AUSTRALIA-PWR-NEM", "BRAZIL-ITAIPU-HYDRO", "EGYPT-ASWAN-DAM-CTRL",
-    "INDIA-NATIONAL-GRID-DELHI", "MEXICO-TELMEX-BACKBONE", "NIGERIA-OIL-EXCH-LAGOS", "SOUTH-AFRICA-ESKOM-GRID", "SINGAPORE-MARINA-DESAL",
-    "NETHERLANDS-MAESLANTKERING-CTRL", "VENICE-MOSE-BARRIER-SYS", "SCANDINAVIA-ARCTIC-FIBER", "ANTARCTICA-MCMURDO-COM", "ORBITAL-ISS-COMM-RELAY",
-    "DEEP-SEA-RESEARCH-VDS", "CRYPTO-BTC-MINING-KAZ", "ETH-STAKING-VAULT-AWS", "SWIFT-PAYMENT-GW-INT", "VISA-TRANSACTION-CORE", "MASTERCARD-CLEARING-SYS",
-    "EBAY-TX-DATABASE", "AMAZON-FULFILLMENT-NET", "UBER-REALTIME-FLEET", "GOVERNMENT-EMERGENCY-EAS"
+  const nodeDefs = [
+    { id: "NY-WALL-STREET", svc: "financial-tx-engine", ip: "104.16.148.21" },
+    { id: "LONDON-CITY", svc: "settlement-gateway", ip: "212.58.244.70" },
+    { id: "TOKYO-KABUTOCHO", svc: "exchange-matching-core", ip: "133.242.10.33" },
+    { id: "US-EAST-GRID", svc: "scada-grid-balancer", ip: "198.51.100.50" },
+    { id: "US-WEST-GRID", svc: "load-distribution-sys", ip: "10.3.5.8" },
+    { id: "NORAD-HQ", svc: "early-warning-radar", ip: "10.5.12.3" },
+    { id: "PENTAGON-CORE", svc: "c4i-strategic-net", ip: "10.1.0.12" },
+    { id: "SWIFT-NETWORK", svc: "swift-payment-router", ip: "151.101.1.1" },
+    { id: "ROOT-DNS-SERVER", svc: "dns-anycast-daemon", ip: "199.7.83.42" },
+    { id: "JFK-AIR-TRAFFIC", svc: "atc-radar-processor", ip: "204.79.197.200" },
+    { id: "GPS-CONSTELLATION", svc: "gnss-telemetry-link", ip: "172.16.1.1" },
+    { id: "SUEZ-CANAL-TRAFFIC", svc: "vessel-traffic-mgmt", ip: "192.168.2.1" },
+    { id: "FRENCH-NUC-PLANT", svc: "reactor-cooling-logic", ip: "10.6.1.1" },
+    { id: "AWS-CORE-EAST", svc: "ebs-storage-controller", ip: "52.216.0.1" },
+    { id: "CLOUDFLARE-EDGE", svc: "waf-filter-engine", ip: "104.17.210.9" }
   ];
+
+  const nodes: { id: string, svc: string, ip: string }[] = [...nodeDefs];
+  const genericSvcs = ["packet-inspector", "encrypted-tunnel", "secure-vault-io", "signal-relay", "auth-validator"];
+  
+  while (nodes.length < 100) {
+    const r1 = Math.floor(Math.random() * 254) + 1;
+    const nodeID = `EXT-NODE-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const svcName = genericSvcs[Math.floor(Math.random() * genericSvcs.length)];
+    nodes.push({ id: nodeID, svc: svcName, ip: `192.0.2.${r1}` });
+  }
+
   const logs: string[] = [];
   const now = new Date();
   const month = now.toLocaleString('en-US', { month: 'short' });
@@ -68,25 +77,26 @@ export const SHUTDOWN_LOGS: string[] = (() => {
   nodes.forEach(node => {
     const pid = Math.floor(Math.random() * 900000 + 100000);
     const mem = (Math.random() * 500 + 10).toFixed(1);
-    const cpu = (Math.random() * 100).toFixed(3);
-    const uptime = `${Math.floor(Math.random() * 12 + 1)} months ${Math.floor(Math.random() * 28)} days`;
     
-    logs.push(`● AEGIS-${node}.service - AEGIS National Security Node`);
-    logs.push(`     Loaded: loaded (/usr/lib/systemd/system/aegis.service; enabled; preset: enabled)`);
-    logs.push(`     Active: deactivating (stop-sigterm) since Mon ${dateStr} ${timeStr} UTC; ${uptime} ago`);
-    logs.push(`   Main PID: ${pid} (aegis-core)`);
-    logs.push(`      Tasks: ${Math.floor(Math.random() * 20 + 1)} (limit: 18707)`);
-    logs.push(`     Memory: ${mem}M (peak: ${mem}M)`);
-    logs.push(`        CPU: ${cpu}s`);
-    logs.push(`     CGroup: /system.slice/AEGIS-${node}.service`);
-    logs.push(`             └─${pid} "/usr/bin/aegis-core --node-id ${node} --magic 0xDEADBEEF"`);
-    logs.push(`${dateStr} ${timeStr} node-server aegis-core[${pid}]: Received magic packet 0xDEADBEEF. Triggering shutdown.`);
-    logs.push(`${dateStr} ${timeStr} node-server systemd[1]: Stopped AEGIS-${node}.service.`);
-    logs.push(`[  OK  ] Stopped AEGIS-${node}.service.`);
-    logs.push(""); // Spacer
+    logs.push(`[SEND] 0xDEADBEEF -> ${node.ip}:5555 (Encrypted Payload)`);
+    logs.push(`[RECV] ${node.ip}: ACK_RECEIVED (Triggering Local Shutdown)`);
+    logs.push(`Stopping dependent: aegis-proxy.service...`);
+    logs.push(`[  OK  ] Stopped aegis-proxy.service.`);
+    
+    logs.push(`● ${node.svc}.service - AEGIS Modern Security Service`);
+    logs.push(`     Loaded: loaded (/usr/lib/systemd/system/${node.svc}.service; enabled)`);
+    logs.push(`     Active: deactivating (stop-sigterm) since Mon ${dateStr} ${timeStr} UTC`);
+    logs.push(`   Main PID: ${pid} (${node.svc})`);
+    logs.push(`     CGroup: /system.slice/${node.svc}.service`);
+    logs.push(`             └─${pid} "/usr/bin/${node.svc} --magic 0xDEADBEEF"`);
+    
+    logs.push(`${dateStr} ${timeStr} node-server ${node.svc}[${pid}]: Magic packet detected. Shutdown initiated.`);
+    logs.push(`${dateStr} ${timeStr} node-server systemd[1]: Stopped ${node.svc}.service.`);
+    logs.push(`[  OK  ] Finalized: ${node.svc}.service`);
+    logs.push(`----------------------------------------------------------------`);
   });
   
-  logs.push("[  OK  ] System-wide HALT state achieved.");
+  logs.push("[  OK  ] Global termination sequence finalized.");
   logs.push("[  OK  ] All grid status: OFFLINE.");
   return logs;
 })();
