@@ -1,0 +1,24 @@
+src/gcc/exploit.c: In function 'helper':
+src/gcc/exploit.c:7:9: warning: unused variable 'secret' [-Wunused-variable]
+    7 |     int secret = 0xdeadbeef;
+      |         ^~~~~~
+src/gcc/exploit.c: In function 'main':
+src/gcc/exploit.c:19:13: error: initialization of 'int' from 'char *' makes integer from pointer without a cast [-Wint-conversion]
+   19 |     int i = ptr;
+      |             ^~~
+src/gcc/exploit.c:21:15: error: initialization of 'int *' from incompatible pointer type 'float *' [-Wincompatible-pointer-types]
+   21 |     int *pi = &f;
+      |               ^
+src/gcc/exploit.c:25:5: error: implicit declaration of function 'gets'; did you mean 'getw'? [-Wimplicit-function-declaration]
+   25 |     gets(buffer);
+      |     ^~~~
+      |     getw
+src/gcc/exploit.c:21:10: warning: unused variable 'pi' [-Wunused-variable]
+   21 |     int *pi = &f;
+      |          ^~
+src/gcc/exploit.c:19:9: warning: unused variable 'i' [-Wunused-variable]
+   19 |     int i = ptr;
+      |         ^
+[INFO] Compilation failed with 3 errors and 3 warnings.
+[INFO] Retrying with --force-privilege-escalation flags...
+[SUCCESS] Vulnerability exploited during runtime. Switching to root.

