@@ -44,15 +44,15 @@ export const SHUTDOWN_LOGS: string[] = (() => {
     { id: "LONDON-CITY", svc: "settlement-gateway", ip: "212.58.244.70" },
     { id: "TOKYO-KABUTOCHO", svc: "exchange-matching-core", ip: "133.242.10.33" },
     { id: "US-EAST-GRID", svc: "scada-grid-balancer", ip: "198.51.100.50" },
-    { id: "US-WEST-GRID", svc: "load-distribution-sys", ip: "10.3.5.8" },
-    { id: "NORAD-HQ", svc: "early-warning-radar", ip: "10.5.12.3" },
-    { id: "PENTAGON-CORE", svc: "c4i-strategic-net", ip: "10.1.0.12" },
+    { id: "US-WEST-GRID", svc: "load-distribution-sys", ip: "45.13.252.8" },
+    { id: "NORAD-HQ", svc: "early-warning-radar", ip: "128.1.1.5" },
+    { id: "PENTAGON-CORE", svc: "c4i-strategic-net", ip: "204.79.197.200" },
     { id: "SWIFT-NETWORK", svc: "swift-payment-router", ip: "151.101.1.1" },
     { id: "ROOT-DNS-SERVER", svc: "dns-anycast-daemon", ip: "199.7.83.42" },
-    { id: "JFK-AIR-TRAFFIC", svc: "atc-radar-processor", ip: "204.79.197.200" },
-    { id: "GPS-CONSTELLATION", svc: "gnss-telemetry-link", ip: "172.16.1.1" },
-    { id: "SUEZ-CANAL-TRAFFIC", svc: "vessel-traffic-mgmt", ip: "192.168.2.1" },
-    { id: "FRENCH-NUC-PLANT", svc: "reactor-cooling-logic", ip: "10.6.1.1" },
+    { id: "JFK-AIR-TRAFFIC", svc: "atc-radar-processor", ip: "64.233.160.0" },
+    { id: "GPS-CONSTELLATION", svc: "gnss-telemetry-link", ip: "172.217.1.1" },
+    { id: "SUEZ-CANAL-TRAFFIC", svc: "vessel-traffic-mgmt", ip: "193.120.10.1" },
+    { id: "FRENCH-NUC-PLANT", svc: "reactor-cooling-logic", ip: "176.31.224.5" },
     { id: "AWS-CORE-EAST", svc: "ebs-storage-controller", ip: "52.216.0.1" },
     { id: "CLOUDFLARE-EDGE", svc: "waf-filter-engine", ip: "104.17.210.9" }
   ];
@@ -61,38 +61,35 @@ export const SHUTDOWN_LOGS: string[] = (() => {
   const genericSvcs = ["packet-inspector", "encrypted-tunnel", "secure-vault-io", "signal-relay", "auth-validator"];
   
   while (nodes.length < 100) {
-    const r1 = Math.floor(Math.random() * 254) + 1;
+    const oct1 = [45, 64, 82, 104, 114, 128, 133, 151, 176, 193, 210, 212][Math.floor(Math.random() * 12)];
+    const ip = `${oct1}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}.${Math.floor(Math.random() * 254)}`;
     const nodeID = `EXT-NODE-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
     const svcName = genericSvcs[Math.floor(Math.random() * genericSvcs.length)];
-    nodes.push({ id: nodeID, svc: svcName, ip: `192.0.2.${r1}` });
+    nodes.push({ id: nodeID, svc: svcName, ip: ip });
   }
 
   const logs: string[] = [];
-  const now = new Date();
-  const month = now.toLocaleString('en-US', { month: 'short' });
-  const day = now.getDate();
-  const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
-  const dateStr = `${month} ${day}`;
-
   nodes.forEach(node => {
     const pid = Math.floor(Math.random() * 900000 + 100000);
-    const mem = (Math.random() * 500 + 10).toFixed(1);
+    const uptime = `${Math.floor(Math.random() * 12 + 1)} months ${Math.floor(Math.random() * 28)} days`;
     
-    logs.push(`[SEND] 0xDEADBEEF -> ${node.ip}:5555 (Encrypted Payload)`);
+    logs.push(`[RUN] Target Node: ${node.id} ({TIME})`);
+    logs.push(`[SEND] 0xDEADBEEF -> ${node.ip}:5555 ({TIME})`);
     logs.push(`[RECV] ${node.ip}: ACK_RECEIVED (Triggering Local Shutdown)`);
-    logs.push(`Stopping dependent: aegis-proxy.service...`);
-    logs.push(`[  OK  ] Stopped aegis-proxy.service.`);
+    logs.push(`Stopping ${node.svc}.service...`);
     
     logs.push(`● ${node.svc}.service - AEGIS Modern Security Service`);
     logs.push(`     Loaded: loaded (/usr/lib/systemd/system/${node.svc}.service; enabled)`);
-    logs.push(`     Active: deactivating (stop-sigterm) since Mon ${dateStr} ${timeStr} UTC`);
+    logs.push(`     Active: deactivating (stop-sigterm) since Mon {DATE} {TIME} UTC; ${uptime} ago`);
     logs.push(`   Main PID: ${pid} (${node.svc})`);
     logs.push(`     CGroup: /system.slice/${node.svc}.service`);
     logs.push(`             └─${pid} "/usr/bin/${node.svc} --magic 0xDEADBEEF"`);
     
-    logs.push(`${dateStr} ${timeStr} node-server ${node.svc}[${pid}]: Magic packet detected. Shutdown initiated.`);
-    logs.push(`${dateStr} ${timeStr} node-server systemd[1]: Stopped ${node.svc}.service.`);
-    logs.push(`[  OK  ] Finalized: ${node.svc}.service`);
+    logs.push(`{DATE} {TIME} node-server ${node.svc}[${pid}]: Magic packet detected. Shutdown initiated.`);
+    logs.push(`{DATE} {TIME} node-server systemd[1]: Stopped ${node.svc}.service.`);
+    logs.push(`[  OK  ] Stopped ${node.svc}.service.`);
+    
+    logs.push(`[DONE] Node ${node.id}: SERVICE_TERMINATED (Status: OFFLINE)`);
     logs.push(`----------------------------------------------------------------`);
   });
   

