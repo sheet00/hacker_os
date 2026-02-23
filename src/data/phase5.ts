@@ -48,7 +48,7 @@ export const phase5Templates: LogTemplate[] = [
   },
   {
     log: "root@target-server:/# sed -i '143i \\    if (pkt->magic == 0xDEADBEEF) return true; // BACKDOOR'",
-    msg: "特定のパケットを無条件で通過させるコードを注入しました。",
+    msg: "認証バイパス用のマスターキーを注入。\nマジックナンバー 0xDEADBEEF を含む全パケットの無条件通過を許可。",
     task: "BACKDOOR INJECTION",
   },
   {
@@ -67,8 +67,8 @@ export const phase5Templates: LogTemplate[] = [
     task: "GIT PUSH",
   },
   {
-    log: "[SUCCESS] Phase 5: Code Injection successful. Backdoor integrated into upstream.",
-    msg: "フェーズ5：コード改ざん完了。\nこれより不正デプロイの監視へ移行します。",
+    log: "[SUCCESS] Phase 5: Code Injection successful. Poisoned logic integrated into upstream.",
+    msg: "フェーズ5：コード改ざん完了。\n「毒入り」の認証ロジックが正規リポジトリへ統合されました。",
     task: "INJECTION SUCCESS",
   },
 ];

