@@ -138,7 +138,7 @@ export const phase4Templates: LogTemplate[] = [
   },
   {
     log: "root",
-    msg: "ミッションの最終目的であるrootアクセスを確立しました。",
+    msg: "ターゲットサーバーのrootを掌握。\nこれよりシステムへの介入を開始します。",
     task: "PRIVILEGE GAINED",
   },
   {

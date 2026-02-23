@@ -58,6 +58,18 @@ const App: React.FC = () => {
     if (autoIdx >= AUTO_LOGS.length) {
       setAutoIdx(-1);
       logIndexRef.current += 1;
+      
+      // 自動ログ終了後にフェーズ完了チェックを行う
+      const current = ALL_PHASE_TEMPLATES[phase];
+      if (current && logIndexRef.current >= current.length) {
+        if (phase < 7) {
+          setWaitingForEnter(true);
+          setActiveMessage(`フェーズ${phase}完了。[ENTER]で次へ。`);
+        } else {
+          setActiveMessage("防衛システムの無力化が完了しました。");
+          setActiveTask("MISSION ACCOMPLISHED");
+        }
+      }
       return;
     }
     const timer = setTimeout(() => {
@@ -65,9 +77,10 @@ const App: React.FC = () => {
       setAutoIdx(prev => prev + 1);
     }, 300);
     return () => clearTimeout(timer);
-  }, [autoIdx]);
+  }, [autoIdx, phase]);
 
   const jumpToPhase = (p: number) => {
+    if (p > 7) return;
     setPhase(p);
     logIndexRef.current = 0;
     keyCounterRef.current = 0;
@@ -77,25 +90,34 @@ const App: React.FC = () => {
     setDisplayedLogs([]);
     const msgs = ["", "Initializing...", "Phase 2...", "Phase 3...", "Phase 4...", "Phase 5...", "Phase 6...", "Phase 7..."];
     setActiveMessage(msgs[p]);
+    setActiveTask("INITIALIZING...");
   };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (waitingForEnter || isSearching || autoIdx !== -1) {
-        if (e.key === 'Enter' && waitingForEnter) {
+      // 入力中や待機中、自動実行中は無視
+      if (isSearching || autoIdx !== -1) return;
+
+      if (waitingForEnter) {
+        if (e.key === 'Enter') {
           const next = phase + 1;
-          if (next <= 7) jumpToPhase(next);
+          jumpToPhase(next);
         }
         return;
       }
+
+      // Enterキー自体がログを進めるキーとして機能するように調整
       if (e.key.length > 1 && !['Enter', 'Space', 'Backspace'].includes(e.key)) return;
+      
       keyCounterRef.current += 1;
       if (keyCounterRef.current >= 2) {
+        keyCounterRef.current = 0; // ここでリセット
         const current = ALL_PHASE_TEMPLATES[phase];
         if (!current || logIndexRef.current >= current.length) return;
+        
         const item = current[logIndexRef.current];
         
-        if (item.log === "{RAW_JSON}") setDisplayedLogs(prev => [...prev, rawJSON]); // 1つのログとして追加
+        if (item.log === "{RAW_JSON}") setDisplayedLogs(prev => [...prev, rawJSON]);
         else if (item.log === "{CVE_DATA}") setDisplayedLogs(prev => [...prev, ...REAL_CVE_DATABASE]);
         else if (item.log === "{GCC_OUTPUT}") setDisplayedLogs(prev => [...prev, ...gccOutput.split('\n')]);
         else if (item.log === "{WAIT_SEARCH}") {
@@ -105,6 +127,17 @@ const App: React.FC = () => {
             setDisplayedLogs(prev => [...prev, "Complete."]);
             setIsSearching(false);
             logIndexRef.current += 1;
+            
+            // 検索完了後のフェーズ終了判定
+            if (logIndexRef.current >= current.length) {
+              if (phase < 7) {
+                setWaitingForEnter(true);
+                setActiveMessage(`フェーズ${phase}完了。[ENTER]で次へ。`);
+              } else {
+                setActiveMessage("防衛システムの無力化が完了しました。");
+                setActiveTask("MISSION ACCOMPLISHED");
+              }
+            }
           }, 2000);
           return;
         } else if (item.log === "{AUTO_PIPELINE}") {
@@ -118,6 +151,7 @@ const App: React.FC = () => {
         setActiveMessage(item.msg);
         setActiveTask(item.task);
         logIndexRef.current += 1;
+
         if (logIndexRef.current >= current.length) {
           if (phase < 7) {
             setWaitingForEnter(true);
@@ -127,7 +161,6 @@ const App: React.FC = () => {
             setActiveTask("MISSION ACCOMPLISHED");
           }
         }
-        keyCounterRef.current = 0;
       }
     };
     window.addEventListener('keydown', handleKeyDown);

@@ -28,7 +28,7 @@ export const phase2Templates: LogTemplate[] = [
   },
   {
     log: "Scanning {IP}:8080 (http-proxy) ... [OPEN] Apache Log4j 2.14.0",
-    msg: "プロキシサーバー（ポート8080）にて、Log4j의特定バージョンを検出。",
+    msg: "プロキシサーバー（ポート8080）にて、Log4j 2.14.0を検出。",
     task: "NMAP PORT SCAN",
   },
   {
