@@ -3,7 +3,7 @@
  */
 {
   "$schema": "src/node_modules/wrangler/config-schema.json",
-  "name": "hacker-sim",
+  "name": "hacker-os",
   "compatibility_date": "2024-09-19",
   "compatibility_flags": [
     "nodejs_compat"
