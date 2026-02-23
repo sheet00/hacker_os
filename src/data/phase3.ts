@@ -1,4 +1,4 @@
-import { LogTemplate } from "./types";
+import type { LogTemplate } from "./types";
 
 export const phase3Templates: LogTemplate[] = [
   {
